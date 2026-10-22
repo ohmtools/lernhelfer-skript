@@ -81,8 +81,8 @@ export function originalWoerter(pfad, { formeln = false, inhalt } = {}) {
 
 /**
  * Text von pdftotext (`-enc UTF-8`, Seiten durch \f getrennt) ohne Kopf- und
- * Fußzeilen (Zeilen, die auf drei oder mehr Seiten gleich vorkommen, Ziffern
- * egal), ohne Zeilen nur aus Seitenzahlen und mit zusammengefügter
+ * Fußzeilen (Zeilen, die auf drei oder mehr Seiten gleich vorkommen, bei zwei
+ * Seiten auf beiden; Ziffern egal), ohne Zeilen nur aus Seitenzahlen und mit zusammengefügter
  * Silbentrennung am Zeilenende.
  */
 export function pdfText(text) {
@@ -93,7 +93,8 @@ export function pdfText(text) {
     for (const k of new Set(s.split("\n").map(schluessel).filter(Boolean)))
       zaehler.set(k, (zaehler.get(k) ?? 0) + 1);
   }
-  const wiederholt = (z) => seiten.length >= 3 && (zaehler.get(schluessel(z)) ?? 0) >= 3;
+  const schwelle = Math.min(3, seiten.filter((x) => x.trim()).length);
+  const wiederholt = (z) => schwelle >= 2 && (zaehler.get(schluessel(z)) ?? 0) >= schwelle;
   return seiten
     .map((s) =>
       s
