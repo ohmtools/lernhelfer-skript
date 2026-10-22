@@ -1,0 +1,90 @@
+# 3 Bauelemente und Signale
+
+::seite[6]
+
+Dieses Kapitel stellt weitere Schaltzeichen nach DIN EN 60617 vor. Der Plattenkondensator besteht aus zwei parallelen Platten im Abstand $d$.
+
+:::grafik[Feld im Plattenkondensator]
+<Zeichnung breite={6} hoehe={3}>
+  <Rechteck von={[1, 0]} nach={[1.2, 3]} gefuellt />
+  <Rechteck von={[4.8, 0]} nach={[5, 3]} gefuellt />
+  <Pfeil von={[1.3, 2.4]} nach={[4.7, 2.4]} stil="akzent" />
+  <Pfeil von={[1.3, 1.5]} nach={[4.7, 1.5]} stil="akzent" text="$\vec{E}$" />
+  <Pfeil von={[1.3, 0.6]} nach={[4.7, 0.6]} stil="akzent" />
+  <Linie punkte={[[1.2, -0.3], [4.8, -0.3]]} stil="hilfslinie" />
+  <Beschriftung bei={[3, -0.3]} text="$d$" anker="unten" />
+  <Beschriftung bei={[1.1, 3]} text="$+$" anker="oben" />
+  <Beschriftung bei={[4.9, 3]} text="$-$" anker="oben" />
+  <Kreis mitte={[3, 1]} radius={0.08} gefuellt />
+  <Beschriftung bei={[3, 1]} text="$P$" anker="unten rechts" />
+</Zeichnung>
+Das Feld zeigt von der positiven zur negativen Platte und ist zwischen den Platten überall gleich stark (homogen).
+:::
+
+## 3.1 Zweipole
+
+:::grafik[Schaltzeichen der Zweipole]
+<Schaltung breite={10} hoehe={6}>
+  <Widerstand von={[0, 6]} nach={[2, 6]} name="R" />
+  <VerstellbarerWiderstand von={[3, 6]} nach={[5, 6]} name="R_v" />
+  <Kondensator von={[6, 6]} nach={[8, 6]} name="C" />
+  <Spule von={[8.5, 6]} nach={[10, 6]} name="L" />
+  <Spannungsquelle von={[0, 4]} nach={[2, 4]} name="U" />
+  <Stromquelle von={[3, 4]} nach={[5, 4]} name="I" />
+  <Wechselquelle von={[6, 4]} nach={[8, 4]} name="u" />
+  <Batterie von={[8.5, 4]} nach={[10, 4]} name="B" />
+  <Diode von={[0, 2]} nach={[2, 2]} name="D" />
+  <ZDiode von={[3, 2]} nach={[5, 2]} name="Z" />
+  <LED von={[6, 2]} nach={[8, 2]} name="LED" />
+  <Lampe von={[8.5, 2]} nach={[10, 2]} name="L" />
+  <Schalter von={[0, 0]} nach={[2, 0]} name="S" />
+  <Sicherung von={[3, 0]} nach={[5, 0]} name="F" />
+  <Messgeraet von={[6, 0]} nach={[8, 0]} art="A" />
+  <Messgeraet von={[8.5, 0]} nach={[10, 0]} art="V" />
+</Schaltung>
+:::
+
+## 3.2 Mehrpole
+
+:::grafik[Verstärker, Transistoren und Transformator]
+<Schaltung breite={12} hoehe={3}>
+  <OPV bei={[1.5, 1.5]} name="OPV" />
+  <Transistor bei={[5, 1.5]} typ="npn" name="T_1" />
+  <MOSFET bei={[8, 1.5]} typ="n" name="T_2" />
+  <Transformator bei={[11, 1.5]} name="Tr" />
+  <Masse bei={[5.5, 0.5]} />
+  <Knoten bei={[5.5, 0.5]} />
+  <Klemme bei={[0, 2]} name="$u_-$" />
+  <Klemme bei={[0, 1]} name="$u_+$" />
+</Schaltung>
+:::
+
+## 3.3 Digitale Signale
+
+Ein Und-Gatter gibt nur dann 1 aus, wenn alle Eingänge 1 sind.
+
+:::grafik[Und-Gatter mit Zeitdiagramm]
+<Schaltung breite={9} hoehe={2}>
+  <Gatter bei={[3, 1]} typ="und" />
+  <Leitung punkte={[[0.5, 1.5], [1.8, 1.5]]} />
+  <Leitung punkte={[[0.5, 0.5], [1.8, 0.5]]} />
+  <Leitung punkte={[[4.2, 1], [5.5, 1]]} />
+  <Klemme bei={[0.5, 1.5]} name="A" />
+  <Klemme bei={[0.5, 0.5]} name="B" />
+  <Klemme bei={[5.5, 1]} name="Y" anker="rechts" />
+  <Gatter bei={[8, 1]} typ="nand" eingaenge={3} name="NAND" />
+</Schaltung>
+<Zeitdiagramm signale={[["A", "2L 4H 2L"], ["B", "4L 4H"], ["Y", "4L 2H 2L"], ["Bus", "2D{0x00} 4D{0x3F} 2X"]]} />
+:::
+
+Ein Mikrocontroller liest die Eingänge so ein:
+
+```c
+uint8_t a = PINB & (1 << PB0);   // Eingang A
+uint8_t b = PINB & (1 << PB1);   // Eingang B
+uint8_t y = a && b;              // Und-Verknüpfung
+```
+
+:::frage[Was gibt ein Und-Gatter aus, wenn genau ein Eingang 1 ist?]
+0, denn alle Eingänge müssten 1 sein.
+:::

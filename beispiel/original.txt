@@ -1,0 +1,62 @@
+Grundlagen der Elektrotechnik – Beispielskript
+1 Grundbegriffe
+Dieses Beispielskript ist frei erfunden. Es zeigt, wie der Lern-
+helfer ein Skript aufbereitet: Der Originaltext bleibt Wort für Wort
+stehen, alles Weitere ist als Ergänzung markiert.
+1.1 Spannung und Strom
+Die elektrische Spannung U treibt den elektrischen Strom I durch
+einen geschlossenen Stromkreis. Ohne Spannung fließt kein Strom.
+R
+U L
+Abb. 1.1: Einfacher Stromkreis aus Spannungsquelle, Widerstand und
+Lampe
+1
+Grundlagen der Elektrotechnik – Beispielskript
+1.2 Das ohmsche Gesetz
+Für einen ohmschen Widerstand ist der Strom proportional zur Span-
+nung:
+U =R·I (1.1)
+Der Proportionalitätsfaktor R heißt Widerstand. Seine Einheit ist das
+Ohm, 1 Ω = 1 V/A.
+Größe Formelzeichen Einheit
+Spannung U Volt (V)
+Strom I Ampere (A)
+Widerstand R Ohm (Ω)
+2
+Grundlagen der Elektrotechnik – Beispielskript
+2 Das RC-Glied
+Ein Kondensator speichert Ladung. Wird er über einen Widerstand
+an eine Gleichspannung U0 gelegt, lädt er sich nicht sofort, sondern
+nach einer Exponentialfunktion auf.
+2.1 Aufladen
+Für die Spannung am Kondensator gilt nach dem Schließen des Schal-
+ters
+uC (t) = U0 1 − e−t/τ mit τ = RC (2.1)
+Nach einer Zeitkonstante ist der Kondensator zu etwa 63 % geladen,
+nach fünf Zeitkonstanten gilt er als vollständig geladen.
+3
+Grundlagen der Elektrotechnik – Beispielskript
+2.2 Wechselspannung
+Abbildung 2.2 zeigt eine sinusförmige Wechselspannung, wie sie ein
+Oszilloskop darstellt.
+4
+Grundlagen der Elektrotechnik – Beispielskript
+CH1 1 V/div DC 0,2 ms/div
+Abb. 2.2: Wechselspannung am Oszilloskop, 1 V/div, 0,2 ms/div
+Am Kondensator eilt der Strom der Spannung um 90° voraus.
+5
+Grundlagen der Elektrotechnik – Beispielskript
+3 Bauelemente und Signale
+Dieses Kapitel stellt weitere Schaltzeichen nach DIN EN 60617 vor.
+Der Plattenkondensator besteht aus zwei parallelen Platten im Ab-
+stand d.
+3.1 Zweipole
+3.2 Mehrpole
+3.3 Digitale Signale
+Ein Und-Gatter gibt nur dann 1 aus, wenn alle Eingänge 1 sind.
+Ein Mikrocontroller liest die Eingänge so ein:
+uint8_t a = PINB & (1 << PB0); // Eingang A
+uint8_t b = PINB & (1 << PB1); // Eingang B
+uint8_t y = a && b; // Und-Verknüpfung
+6
+

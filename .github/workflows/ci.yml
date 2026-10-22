@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run pruefen
+      - name: Beispiel wortgleich mit seinem Original
+        run: npm run wortlaut -- src/inhalt --gegen beispiel/original.txt
+      - run: npm run build
+      - name: Größe der HTML-Datei unter 2,5 MB
+        run: |
+          groesse=$(stat -c%s dist/index.html)
+          echo "dist/index.html: $groesse Bytes"
+          test "$groesse" -lt 2500000
+      - name: ohmtools-Design
+        run: npx --yes github:ohmtools/design check src/index.css components.json src/components/ui/*.tsx src/components/shell/*.tsx src/primitiven/*.tsx
+
+  # Wie der Lernhelfer in Claude.ai: frische Installation ohne devDependencies.
+  wie-im-lernhelfer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --omit=dev
+      - run: npm run pruefen
+      - run: npm run build
+      - run: npm run quelle -- /tmp/skript-quelle.zip
