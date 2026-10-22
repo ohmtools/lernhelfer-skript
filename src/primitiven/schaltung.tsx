@@ -338,14 +338,15 @@ export function Leitung({ punkte, akzent }: { punkte: Wertbar<P[]>; akzent?: Wer
 
 export function Knoten({
   bei,
-  name,
+  name: nameAngabe,
   anker = "oben rechts",
 }: {
   bei: P;
-  name?: string;
+  name?: Wertbar<string>;
   anker?: Anker;
 }) {
   const { px } = useFlaeche();
+  const name = useWert(nameAngabe ?? "");
   const [x, y] = px(bei);
   return (
     <>
@@ -355,8 +356,17 @@ export function Knoten({
   );
 }
 
-export function Klemme({ bei, name, anker = "links" }: { bei: P; name?: string; anker?: Anker }) {
+export function Klemme({
+  bei,
+  name: nameAngabe,
+  anker = "links",
+}: {
+  bei: P;
+  name?: Wertbar<string>;
+  anker?: Anker;
+}) {
   const { px } = useFlaeche();
+  const name = useWert(nameAngabe ?? "");
   const [x, y] = px(bei);
   return (
     <>
@@ -380,18 +390,19 @@ export function Masse({ bei }: { bei: P }) {
 
 function Mehrpol({
   bei,
-  name,
+  name: nameAngabe,
   akzent,
   children,
   namePos,
 }: {
   bei: P;
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
   children: (q: (dx: number, dy: number) => P) => ReactNode;
   namePos?: [number, number, Anker];
 }) {
   const { px } = useFlaeche();
+  const name = useWert(nameAngabe ?? "");
   const hervor = useWert(akzent ?? false);
   const q = (dx: number, dy: number) => px([bei[0] + dx, bei[1] + dy]);
   const [nx, ny, anker] = namePos ?? [0, 1.1, "oben"];
@@ -413,7 +424,7 @@ export function OPV({
   plusOben = false,
 }: {
   bei: P;
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
   plusOben?: boolean;
 }) {
@@ -477,7 +488,7 @@ export function Transistor({
 }: {
   bei: P;
   typ?: "npn" | "pnp";
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
 }) {
   return (
@@ -512,7 +523,7 @@ export function MOSFET({
 }: {
   bei: P;
   typ?: "n" | "p";
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
 }) {
   return (
@@ -550,7 +561,7 @@ export function Transformator({
   akzent,
 }: {
   bei: P;
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
 }) {
   return (
@@ -606,7 +617,7 @@ export function Gatter({
   bei: P;
   typ: keyof typeof GATTER;
   eingaenge?: 1 | 2 | 3;
-  name?: string;
+  name?: Wertbar<string>;
   akzent?: Wertbar<boolean>;
 }) {
   const { zeichen, negiert } = GATTER[typ];

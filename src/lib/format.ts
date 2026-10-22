@@ -36,7 +36,8 @@ const SI = new Set([
 
 export function zahl(wert: number, stellen = 3) {
   if (!Number.isFinite(wert)) return "–";
-  return new Intl.NumberFormat("de-DE", { maximumSignificantDigits: stellen }).format(wert);
+  // Ohne Tausenderpunkt: „1150 Windungen“, nicht „1.150“.
+  return new Intl.NumberFormat("de-DE", { maximumSignificantDigits: stellen, useGrouping: false }).format(wert);
 }
 
 export function groesse(wert: number, einheit?: string, stellen = 3) {
