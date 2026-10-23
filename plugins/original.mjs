@@ -10,9 +10,14 @@ import { ERGAENZUNGEN, FRAGENGRUPPE } from "./ergaenzungen.mjs";
 import remarkSkript from "./remark-skript.mjs";
 import { syntax } from "./syntax.mjs";
 
-/** Gemeinsame Schreibweise: Ligaturen, Anführungszeichen, Striche, weiche Trennstriche. */
+/**
+ * Gemeinsame Schreibweise: Ligaturen, Anführungszeichen, Striche, weiche
+ * Trennstriche. Gradzeichen fallen weg, denn pdftotext liefert „°“ oft als
+ * „◦“ (sonst ein Aufzählungszeichen) oder „º“.
+ */
 export function normalisieren(text) {
   return text
+    .replace(/[°º˚]/g, " ")
     .normalize("NFKC")
     .replace(/­/g, "")
     .replace(/[„“”«»″]/g, '"')

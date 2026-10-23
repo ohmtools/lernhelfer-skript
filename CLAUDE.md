@@ -10,8 +10,9 @@ Datei.
 
 ## Unverhandelbar
 
-- **Wortlaut:** Alles außerhalb einer Ergänzung ist Originaltext. Die Liste
-  der Ergänzungen steht nur in `plugins/ergaenzungen.mjs`; Webseite
+- **Wortlaut:** Alles außerhalb einer Ergänzung ist Originaltext, auch in
+  Blöcken des Originals wie `:::abbildung` (Teilbilder). Die Listen der
+  Ergänzungen, Blöcke und Marken stehen nur in `plugins/ergaenzungen.mjs`; Webseite
   (`plugins/remark-skript.mjs`), Prüfung (`scripts/wortlaut.mjs`,
   `plugins/original.mjs`), Umwandlung (`scripts/mdx.mjs`) und Tests lesen sie
   von dort.
@@ -71,7 +72,10 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   unbekannte `:::wort` brechen ab; Ergänzungen werden Komponenten (großer
   Anfangsbuchstabe, fehlende brechen in MDX ab statt still ein `div` zu
   werden), Fragen hintereinander ein Block `Fragen`, ein Bild allein in einem
-  Absatz eine `Abbildung`; Exporte `titel`, `gliederung`, `seiten`,
+  Absatz eine `Abbildung`, `:::abbildung` die Teilbilder (`Abbildungen`,
+  `Teilbild`, gemeinsame `Bildunterschrift` zuletzt, wie im PDF; so zählt
+  sie auch `original.mjs`); Absätze unter einer Option von `:::auswahl` sind
+  ihre `Optionserklaerung`; Exporte `titel`, `gliederung`, `seiten`,
   `suchtext`.
 - `src/primitiven/`: alle Bausteine, `index.ts` ist die Liste für jedes
   Kapitel. `flaeche.tsx` ist die Zeichenfläche für `Zeichnung` und
@@ -80,9 +84,11 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   verkleinert. Schaltzeichen nach DIN EN 60617 wie im Übungsblatt des
   Lernhelfers (Spule gefüllt, gerade Spannungspfeile, OPV als Rechteck).
   Graphen mit Mafs (gepinnt, unverändert seit 2024; nur `graph.tsx` benutzt
-  es). `experiment.tsx`: Werte der Regler eines `:::interaktiv`, Startwerte
-  aus dem Baum, damit schon das erste Bild und die Prüfung auf dem Server mit
-  ihnen rechnen.
+  es; `Hilfslinie` mit `Line` von Mafs). `experiment.tsx`: Werte der Regler
+  eines `:::interaktiv`, Startwerte aus dem Baum, damit schon das erste Bild
+  und die Prüfung auf dem Server mit ihnen rechnen, danach die `Rechnung`en
+  der Reihe nach (Werte oder Funktionen). `Regler art="zeit"` spielt erst
+  auf Knopfdruck ab, nie von selbst (prefers-reduced-motion).
 - `src/pruefen.tsx` rendert jedes Kapitel für `npm run pruefen` auf dem
   Server (Vite im Middleware-Modus); Mafs rendert dort nichts, deshalb
   rechnen `Kurve` und `Zeiger` auf dem Server ihre Funktionen nur nach.

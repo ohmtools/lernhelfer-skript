@@ -3,7 +3,9 @@
 //
 //   npm run ausschnitt -- skript.pdf 12 0 0.5 1 1 bilder/s12-1.png
 //
-// Optionen: --dpi 150 (Standard), --grau (Graustufen, kleinere Datei).
+// Die Endung des Ziels bestimmt das Format: .png für Zeichnungen, .jpg für
+// Fotos (deutlich kleiner). Optionen: --dpi 150 (Standard), --grau
+// (Graustufen, kleinere Datei).
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -21,10 +23,16 @@ const dpi = Number(option("--dpi", "150"));
 const [pdf, seite, links, oben, rechts, unten, ziel] = args;
 if (!ziel) {
   console.error(
-    "Aufruf: npm run ausschnitt -- <pdf> <seite> <links> <oben> <rechts> <unten> <ziel.png> [--dpi 150] [--grau]",
+    "Aufruf: npm run ausschnitt -- <pdf> <seite> <links> <oben> <rechts> <unten> <ziel.png|ziel.jpg> [--dpi 150] [--grau]",
   );
   process.exit(2);
 }
+const endung = path.extname(ziel).toLowerCase();
+if (![".png", ".jpg", ".jpeg"].includes(endung)) {
+  console.error(`Ziel muss auf .png (Zeichnung) oder .jpg (Foto) enden, nicht „${endung}“.`);
+  process.exit(2);
+}
+const jpeg = endung !== ".png";
 const info = execFileSync("pdfinfo", ["-f", seite, "-l", seite, pdf], { encoding: "utf8" });
 const groesse =
   info.match(new RegExp(`Page\\s+${seite} size:\\s+([\\d.]+) x ([\\d.]+)`)) ??
@@ -39,7 +47,7 @@ const box = [
   Math.round((y2 - y1) * hp),
 ];
 fs.mkdirSync(path.dirname(path.resolve(ziel)), { recursive: true });
-const ohneEndung = path.resolve(ziel).replace(/\.png$/, "");
+const ohneEndung = path.resolve(ziel).slice(0, -endung.length);
 execFileSync("pdftoppm", [
   "-f",
   seite,
@@ -56,11 +64,12 @@ execFileSync("pdftoppm", [
   "-H",
   String(box[3]),
   ...(grau ? ["-gray"] : []),
-  "-png",
+  ...(jpeg ? ["-jpeg", "-jpegopt", "quality=85"] : ["-png"]),
   "-singlefile",
   pdf,
   ohneEndung,
 ]);
-console.log(
-  `${ziel}: ${box[2]} × ${box[3]} px, ${Math.round(fs.statSync(`${ohneEndung}.png`).size / 1024)} KB`,
-);
+// pdftoppm hängt .png oder .jpg selbst an.
+const geschrieben = `${ohneEndung}${jpeg ? ".jpg" : ".png"}`;
+if (geschrieben !== path.resolve(ziel)) fs.renameSync(geschrieben, path.resolve(ziel));
+console.log(`${ziel}: ${box[2]} × ${box[3]} px, ${Math.round(fs.statSync(ziel).size / 1024)} KB`);

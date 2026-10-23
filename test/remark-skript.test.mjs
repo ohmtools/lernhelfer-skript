@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { lesen, originalWoerter } from "../plugins/original.mjs";
+import { visit } from "unist-util-visit";
 import { zuMdx } from "../scripts/mdx.mjs";
 
 const woerter = (text, endung = ".md") =>
@@ -59,4 +60,43 @@ test("Umwandlung nach MDX maskiert { } < im Text, nicht in Formeln und Code", ()
   );
   assert.doesNotMatch(mdx, /weg/);
   assert.doesNotThrow(() => lesen("a.mdx", mdx));
+});
+
+test("Teilbilder: erst ihre Unterschriften, dann die gemeinsame, alles Original", () => {
+  const md =
+    ":::abbildung[Abb. 3: Beide]\n![(a) Links](bilder/a.png)\n\n![(b) Rechts](bilder/b.png)\n:::";
+  assert.deepEqual(woerter(md), [
+    "(",
+    "a",
+    ")",
+    "Links",
+    "(",
+    "b",
+    ")",
+    "Rechts",
+    "Abb",
+    ".",
+    "3",
+    ":",
+    "Beide",
+  ]);
+  assert.throws(() => lesen("a.md", ":::abbildung[A]\n![x](a.png)\n:::"), /mindestens zwei/);
+  assert.throws(
+    () => lesen("a.md", ":::abbildung[A]\n![x](a.png)\n\nText\n\n![y](b.png)\n:::"),
+    /nur Bilder/,
+  );
+});
+
+test("Auswahl: eingerückte Absätze unter einer Option sind ihre Erklärung", () => {
+  const { tree } = lesen(
+    "a.md",
+    ":::auswahl[F?]\n- [x] Richtig\n- [ ] Falsch\n\n  Weil es so ist.\n\nFür alle.\n:::",
+  );
+  const optionen = [];
+  visit(tree, (k) => {
+    if (k.data?.hName === "Option") optionen.push(k);
+  });
+  assert.equal(optionen.length, 2);
+  assert.equal(optionen[0].children.at(-1).data?.hName, undefined);
+  assert.equal(optionen[1].children.at(-1).data?.hName, "Optionserklaerung");
 });

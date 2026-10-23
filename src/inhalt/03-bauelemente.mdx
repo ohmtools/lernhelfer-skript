@@ -4,6 +4,16 @@
 
 Dieses Kapitel stellt weitere Schaltzeichen nach DIN EN 60617 vor. Der Plattenkondensator besteht aus zwei parallelen Platten im Abstand $d$.
 
+:::abbildung[Abb. 3.1: Zwei Bauformen von Kondensatoren]
+![(a) Plattenkondensator](bilder/s6-1.png "invertieren")
+
+![(b) Wickelkondensator](bilder/s6-2.png "invertieren")
+:::
+
+:::anmerkung[Zur Abbildung 3.1]
+Beide Bauformen bestehen aus zwei leitenden Flächen, die sich nicht berühren. Der Wickelkondensator rollt lange, schmale Folien auf: So passt eine große Fläche in ein kleines Gehäuse.
+:::
+
 :::grafik[Feld im Plattenkondensator]
 <Zeichnung breite={6} hoehe={3}>
   <Rechteck von={[1, 0]} nach={[1.2, 3]} gefuellt />
@@ -87,4 +97,20 @@ uint8_t y = a && b;              // Und-Verknüpfung
 
 :::frage[Was gibt ein Und-Gatter aus, wenn genau ein Eingang 1 ist?]
 0, denn alle Eingänge müssten 1 sein.
+:::
+
+:::auswahl[Welches Gatter gibt nur dann 0 aus, wenn alle Eingänge 1 sind?]
+- [ ] Und-Gatter
+
+  Das Und-Gatter gibt in diesem Fall gerade 1 aus.
+- [x] Nand-Gatter
+- [ ] Oder-Gatter
+
+  Das Oder-Gatter gibt schon 1 aus, sobald ein Eingang 1 ist.
+
+Das Nand-Gatter ist ein Und-Gatter mit negiertem Ausgang.
+:::
+
+:::frage[Woran erkennst du im Zeitdiagramm, dass $Y$ die Und-Verknüpfung von $A$ und $B$ ist?]
+$Y$ ist nur dort 1, wo $A$ und $B$ beide 1 sind, sonst 0.
 :::

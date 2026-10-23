@@ -11,8 +11,23 @@ import {
   Interaktiv,
   Variablen,
 } from "@/primitiven/ergaenzungen";
-import { Auswahlfrage, Frage, Option, Optionen, Rechenfrage } from "@/primitiven/fragen";
-import { Funktionsgraph, Kurve, Punkt, Zeiger, Zeigerdiagramm } from "@/primitiven/graph";
+import {
+  Auswahlfrage,
+  Frage,
+  Option,
+  Optionen,
+  Optionserklaerung,
+  Rechenfrage,
+} from "@/primitiven/fragen";
+import {
+  Funktionsgraph,
+  Hilfslinie,
+  Kurve,
+  Punkt,
+  Zeiger,
+  Zeigerdiagramm,
+} from "@/primitiven/graph";
+import { Rechnung } from "@/primitiven/experiment";
 import { Regler, Wert } from "@/primitiven/regler";
 import * as schaltung from "@/primitiven/schaltung";
 import { Formel, Tex } from "@/primitiven/Tex";
@@ -41,6 +56,7 @@ export const komponenten = {
   Auswahlfrage,
   Optionen,
   Option,
+  Optionserklaerung,
   Rechenfrage,
   // Bausteine in :::grafik und :::interaktiv
   Tex,
@@ -55,9 +71,11 @@ export const komponenten = {
   Funktionsgraph,
   Kurve,
   Punkt,
+  Hilfslinie,
   Zeigerdiagramm,
   Zeiger,
   Zeitdiagramm,
   Regler,
   Wert,
+  Rechnung,
 } satisfies MDXComponents;

@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { Children, isValidElement, type ComponentProps } from "react";
 import { cn } from "cn";
 
 // Die Elemente des Originaltexts. Größen und Gewichte nach der Skala des
@@ -91,6 +91,51 @@ export function Abbildung({
       )}
     </figure>
   );
+}
+
+/** Abbildung des Originals aus Teilbildern (a), (b) …, darunter die gemeinsame Bildunterschrift. */
+export function Abbildungen({ children }: { children?: React.ReactNode }) {
+  const kinder = Children.toArray(children);
+  const unterschrift = kinder.filter((k) => isValidElement(k) && k.type === Bildunterschrift);
+  return (
+    <figure className="my-6">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] items-end gap-6">
+        {kinder.filter((k) => !(isValidElement(k) && k.type === Bildunterschrift))}
+      </div>
+      {unterschrift.length > 0 && (
+        <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+          {unterschrift}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+/** Ein Teilbild in `Abbildungen` mit seiner eigenen Unterschrift, z.B. „(a) Kurzschlussläufer“. */
+export function Teilbild({
+  beschriftung,
+  invertieren,
+  children,
+}: {
+  beschriftung?: string;
+  invertieren?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <figure className={cn(invertieren && "dark:[&_img]:hue-rotate-180 dark:[&_img]:invert")}>
+      {children}
+      {beschriftung && (
+        <figcaption className="mt-2 text-center text-sm text-muted-foreground">
+          {beschriftung}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+/** Gemeinsame Bildunterschrift einer `:::abbildung`; `Abbildungen` setzt sie darunter. */
+export function Bildunterschrift({ children }: { children?: React.ReactNode }) {
+  return <>{children}</>;
 }
 
 /** Wo im Original-PDF eine Seite beginnt. */

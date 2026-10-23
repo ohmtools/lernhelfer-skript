@@ -5,7 +5,7 @@ import GithubSlugger from "github-slugger";
 import { toString } from "mdast-util-to-string";
 import { visit, SKIP } from "unist-util-visit";
 import { valueToEstree } from "estree-util-value-to-estree";
-import { CONTAINER, ERGAENZUNGEN, FRAGENGRUPPE, MARKEN } from "./ergaenzungen.mjs";
+import { BLOECKE, CONTAINER, ERGAENZUNGEN, FRAGENGRUPPE, MARKEN } from "./ergaenzungen.mjs";
 
 const DIREKTIVEN = new Set(["containerDirective", "leafDirective", "textDirective"]);
 const JSX = new Set([
@@ -43,7 +43,8 @@ function labelUndInhalt(node) {
 
 /**
  * Optionen einer Auswahlfrage aus einer Aufgabenliste (`- [x] richtig`).
- * Was nach der Liste steht, ist die Erklärung.
+ * Absätze unter einer Option (nach einer Leerzeile eingerückt) sind ihre
+ * eigene Erklärung, was nach der Liste steht, die Erklärung für alle.
  */
 function auswahl(file, node, inhalt) {
   const index = inhalt.findIndex(
@@ -54,16 +55,60 @@ function auswahl(file, node, inhalt) {
   const optionen = liste.children.map((item) => {
     if (typeof item.checked !== "boolean")
       file.fail(`Jede Option in :::auswahl braucht [ ] oder [x] (${ort(item)}).`, item);
-    const kinder =
-      item.children.length === 1 && item.children[0].type === "paragraph"
-        ? item.children[0].children
-        : item.children;
-    return element("Option", kinder, { richtig: item.checked });
+    const [erstes, ...rest] = item.children;
+    const text = erstes?.type === "paragraph" ? erstes.children : item.children;
+    const erklaerung = erstes?.type === "paragraph" && rest.length ? rest : [];
+    return element(
+      "Option",
+      [...text, ...(erklaerung.length ? [element("Optionserklaerung", erklaerung)] : [])],
+      { richtig: item.checked },
+    );
   });
   if (!liste.children.some((i) => i.checked))
     file.fail(`:::auswahl braucht mindestens eine richtige Option [x] (${ort(node)}).`, node);
   const rest = [...inhalt.slice(0, index), ...inhalt.slice(index + 1)];
   return [element("Optionen", optionen), ...(rest.length ? [element("Antwort", rest)] : [])];
+}
+
+/**
+ * Teilbilder einer `:::abbildung`: Absätze nur aus Bildern, jedes mit seiner
+ * Teilunterschrift als Alternativtext. Die gemeinsame Bildunterschrift (das
+ * Label) kommt danach, wie im PDF unter den Teilbildern.
+ */
+function abbildung(file, node) {
+  if (node.type !== BLOECKE.abbildung.art)
+    file.fail(
+      `„abbildung“ wird als :::abbildung[Bildunterschrift] geschrieben (${ort(node)}).`,
+      node,
+    );
+  const { label, inhalt } = labelUndInhalt(node);
+  const bilder = [];
+  for (const kind of inhalt) {
+    const teile =
+      kind.type === "paragraph"
+        ? kind.children.filter((k) => k.type !== "break" && !(k.type === "text" && !k.value.trim()))
+        : [kind];
+    if (!teile.length || teile.some((k) => k.type !== "image"))
+      file.fail(
+        `In :::abbildung stehen nur Bilder, jedes mit seiner Teilunterschrift (${ort(kind)}).`,
+        kind,
+      );
+    bilder.push(...teile);
+  }
+  if (bilder.length < 2)
+    file.fail(
+      `:::abbildung braucht mindestens zwei Teilbilder (${ort(node)}). Ein einzelnes Bild steht allein in seinem Absatz.`,
+      node,
+    );
+  node.children = [
+    ...bilder.map((bild) => {
+      const invertieren = bild.title === "invertieren";
+      bild.title = null;
+      return element("Teilbild", [bild], { beschriftung: bild.alt ?? "", invertieren });
+    }),
+    ...(label ? [element("Bildunterschrift", label.children)] : []),
+  ];
+  node.data = { hName: BLOECKE.abbildung.komponente, hProperties: {} };
 }
 
 function ergaenzung(file, node, name, def) {
@@ -134,9 +179,13 @@ export default function remarkSkript(optionen = {}) {
     visit(tree, (node, index, parent) => {
       if (!DIREKTIVEN.has(node.type) || !parent) return;
       const name = node.name;
-      if (ERGAENZUNGEN[name] || MARKEN[name]) return;
+      if (ERGAENZUNGEN[name] || MARKEN[name] || BLOECKE[name]) return;
       if (node.type === "containerDirective") {
-        const erlaubt = [...Object.keys(ERGAENZUNGEN), ...Object.keys(MARKEN)].join(", ");
+        const erlaubt = [
+          ...Object.keys(ERGAENZUNGEN),
+          ...Object.keys(BLOECKE),
+          ...Object.keys(MARKEN),
+        ].join(", ");
         file.fail(`Unbekannte Markierung „:::${name}“ (${ort(node)}). Erlaubt: ${erlaubt}.`, node);
       }
       const text = { type: "text", value: quelltext(file, node) };
@@ -228,6 +277,7 @@ export default function remarkSkript(optionen = {}) {
         node.children = [];
         return;
       }
+      if (BLOECKE[node.name]) return abbildung(file, node);
       ergaenzung(file, node, node.name, ERGAENZUNGEN[node.name]);
     });
     visit(tree, (node) => fragenGruppieren(node));

@@ -29,6 +29,13 @@ export const MARKEN = {
   seite: { art: "leafDirective", komponente: "Seite" },
 };
 
+// Blöcke des Originals: Ihr Text gehört zum Original. `:::abbildung[Gemeinsame
+// Bildunterschrift]` fasst Teilbilder (a), (b) … mit eigenen Unterschriften
+// zusammen.
+export const BLOECKE = {
+  abbildung: { art: "containerDirective", komponente: "Abbildungen" },
+};
+
 // Aufeinanderfolgende Fragen fasst die Webseite zu einem Block zusammen.
 export const FRAGENGRUPPE = "Fragen";
 

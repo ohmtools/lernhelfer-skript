@@ -9,8 +9,9 @@ Vorlage für die Fähigkeit „Skript verbessern“ des
 Seiten oder Kapiteln eines Skripts eine interaktive Webseite in **einer
 einzigen HTML-Datei**. Der Originaltext bleibt Wort für Wort stehen, alles,
 was Claude ergänzt (Erklärungen, Variablen zu jeder Gleichung, Erklärungen zu
-Abbildungen, eigene Grafiken, interaktive Elemente, Wiederholungsfragen), ist
-mit einer roten Linie markiert und lässt sich ausblenden.
+Abbildungen, eigene Grafiken, interaktive Elemente und Animationen,
+Wiederholungsfragen), ist mit einer roten Linie markiert und lässt sich
+ausblenden.
 
 Der Lernhelfer klont dieses Repository in Claude.ai, schreibt den Inhalt nach
 `src/inhalt/` und baut die Seite. Die Bausteine für den Inhalt beschreibt

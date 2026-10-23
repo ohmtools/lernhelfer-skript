@@ -32,6 +32,7 @@ export function Frage({ children }: { children: ReactNode }) {
 }
 
 // Auswahlfrage: eine richtige Option → Optionsfelder, mehrere → Kästchen.
+// Nach „Prüfen“ steht unter jeder markierten Option ihre eigene Erklärung.
 
 export function Auswahlfrage({ children }: { children: ReactNode }) {
   return (
@@ -41,10 +42,25 @@ export function Auswahlfrage({ children }: { children: ReactNode }) {
   );
 }
 
+/** Erklärung zu einer Option; `Optionen` zeigt sie nach dem Prüfen unter ihr. */
+export function Optionserklaerung({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
+
+const istErklaerung = (k: ReactNode) => isValidElement(k) && k.type === Optionserklaerung;
+
 export function Optionen({ children }: { children: ReactNode }) {
   const optionen = Children.toArray(children).filter(isValidElement) as React.ReactElement<{
     richtig?: boolean;
+    children?: ReactNode;
   }>[];
+  const teile = optionen.map((o) => {
+    const kinder = Children.toArray(o.props.children);
+    return {
+      text: kinder.filter((k) => !istErklaerung(k)),
+      erklaerung: kinder.filter(istErklaerung),
+    };
+  });
   const richtige = new Set(optionen.flatMap((o, i) => (o.props.richtig ? [i] : [])));
   const mehrfach = richtige.size > 1;
   const [gewaehlt, setGewaehlt] = useState<Set<number>>(new Set());
@@ -63,35 +79,42 @@ export function Optionen({ children }: { children: ReactNode }) {
     });
   };
 
-  const zeilen = optionen.map((option, i) => {
+  const zeilen = teile.map(({ text, erklaerung }, i) => {
     const feld = `${id}-${i}`;
-    const zeichen =
-      geprueft && (richtige.has(i) || gewaehlt.has(i)) ? (
-        richtige.has(i) ? (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Check aria-hidden className="size-3.5 text-foreground" /> richtig
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <X aria-hidden className="size-3.5 text-destructive" /> falsch
-          </span>
-        )
-      ) : null;
+    const markiert = geprueft && (richtige.has(i) || gewaehlt.has(i));
+    const zeichen = markiert ? (
+      richtige.has(i) ? (
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Check aria-hidden className="size-3.5 text-foreground" /> richtig
+        </span>
+      ) : (
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <X aria-hidden className="size-3.5 text-destructive" /> falsch
+        </span>
+      )
+    ) : null;
     return (
-      <div key={i} className="flex items-start gap-3">
-        {mehrfach ? (
-          <Checkbox
-            id={feld}
-            checked={gewaehlt.has(i)}
-            onCheckedChange={(an) => umschalten(i, an === true)}
-          />
-        ) : (
-          <RadioGroupItem id={feld} value={String(i)} />
+      <div key={i}>
+        <div className="flex items-start gap-3">
+          {mehrfach ? (
+            <Checkbox
+              id={feld}
+              checked={gewaehlt.has(i)}
+              onCheckedChange={(an) => umschalten(i, an === true)}
+            />
+          ) : (
+            <RadioGroupItem id={feld} value={String(i)} />
+          )}
+          <label htmlFor={feld} className="flex-1 text-sm leading-snug">
+            {text}
+          </label>
+          {zeichen}
+        </div>
+        {markiert && erklaerung.length > 0 && (
+          <div className="mt-1 ml-7.5 text-sm leading-relaxed text-muted-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {erklaerung}
+          </div>
         )}
-        <label htmlFor={feld} className="flex-1 text-sm leading-snug">
-          {option}
-        </label>
-        {zeichen}
       </div>
     );
   });

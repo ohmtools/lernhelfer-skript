@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { pdfText, woerter } from "../plugins/original.mjs";
 import { pruefeWortlaut } from "../scripts/wortlaut.mjs";
 
 const WURZEL = path.resolve(import.meta.dirname, "..");
@@ -59,4 +60,10 @@ test("Kapitel gegen Entwurf: auch Formeln müssen gleich sein", () => {
     fs.readFileSync(datei, "utf8").replace("U = R \\cdot I \\tag{1.1}", "U = R I \\tag{1.1}"),
   );
   assert.equal(pruefeWortlaut([datei], entwurf).length, 1);
+});
+
+test("Gradzeichen und echte Bindestriche am Zeilenende sind keine Abweichung", () => {
+  assert.deepEqual(woerter(pdfText("um 90◦ voraus")), woerter("um 90° voraus"));
+  assert.deepEqual(woerter(pdfText("Rechte-\nHand-Regel")), woerter("Rechte-Hand-Regel"));
+  assert.deepEqual(woerter(pdfText("Dreh-\nfeld")), woerter("Drehfeld"));
 });

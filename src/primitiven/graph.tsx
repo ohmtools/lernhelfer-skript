@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { Coordinates, Mafs, Plot, Point, Vector } from "mafs";
+import { Coordinates, Line, Mafs, Plot, Point, Vector } from "mafs";
 import { zahl } from "@/lib/format";
 import { useExperiment, useWert, type Werte, type Wertbar } from "@/primitiven/experiment";
 import { Gemischt, type Anker } from "@/primitiven/flaeche";
@@ -212,6 +212,62 @@ export function Punkt({
     <>
       <Point x={px} y={py} color="var(--foreground)" />
       {t && <GraphText bei={[px, py]} text={t} anker={anker} />}
+    </>
+  );
+}
+
+/**
+ * Gestrichelte Hilfslinie in `Funktionsgraph` und `Zeigerdiagramm`: von `von`
+ * nach `nach`, oder mit `winkel` (Grad) als Gerade durch `von` (Standard:
+ * Ursprung) über den ganzen Graphen, z.B. eine Wicklungsachse.
+ */
+export function Hilfslinie({
+  von = [0, 0],
+  nach,
+  winkel,
+  text,
+  anker,
+}: {
+  von?: Wertbar<[number, number]>;
+  nach?: Wertbar<[number, number]>;
+  winkel?: Wertbar<number>;
+  text?: Wertbar<string>;
+  anker?: Anker;
+}) {
+  const g = useContext(GraphContext);
+  const a = useWert(von);
+  const b0 = useWert(nach ?? null);
+  const w = useWert(winkel ?? null);
+  const t = useWert(text ?? "");
+  if (import.meta.env.SSR || !g) return null;
+  const farbe = "var(--muted-foreground)";
+  if (w === null && !b0) return null;
+  const rad = ((w ?? 0) * Math.PI) / 180;
+  // Bei `winkel` steht der Text kurz vor dem Rand des Graphen.
+  const bis = (start: number, richtung: number, kleinst: number, groesst: number) =>
+    richtung > 1e-9
+      ? (groesst - start) / richtung
+      : richtung < -1e-9
+        ? (kleinst - start) / richtung
+        : Infinity;
+  const laenge = Math.min(
+    bis(a[0], Math.cos(rad), g.x.min, g.x.max),
+    bis(a[1], Math.sin(rad), g.y.min, g.y.max),
+  );
+  const b: [number, number] =
+    b0 ??
+    (Number.isFinite(laenge)
+      ? [a[0] + 0.9 * laenge * Math.cos(rad), a[1] + 0.9 * laenge * Math.sin(rad)]
+      : a);
+  const richtung = `${b[1] >= a[1] ? "oben" : "unten"} ${b[0] >= a[0] ? "rechts" : "links"}`;
+  return (
+    <>
+      {b0 ? (
+        <Line.Segment point1={a} point2={b} color={farbe} style="dashed" weight={1} />
+      ) : (
+        <Line.PointAngle point={a} angle={rad} color={farbe} style="dashed" weight={1} />
+      )}
+      {t && <GraphText bei={b} text={t} anker={anker ?? (richtung as Anker)} />}
     </>
   );
 }

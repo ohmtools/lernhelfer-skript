@@ -50,6 +50,8 @@ Am Kondensator eilt der Strom der Spannung um 90° voraus.
 Dieses Kapitel stellt weitere Schaltzeichen nach DIN EN 60617 vor.
 Der Plattenkondensator besteht aus zwei parallelen Platten im Ab-
 stand d.
+(a) Plattenkondensator (b) Wickelkondensator
+Abb. 3.1: Zwei Bauformen von Kondensatoren
 3.1 Zweipole
 3.2 Mehrpole
 3.3 Digitale Signale
