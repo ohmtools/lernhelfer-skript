@@ -4,7 +4,6 @@ import { cn } from "cn";
 import { PanelHeader } from "@/components/ohmtools/panel-header";
 import { PanelSheet } from "@/components/ohmtools/panel-sheet";
 import { Button } from "@/components/ui/button";
-import { AnsichtTabs } from "@/components/shell/AnsichtTabs";
 import { AufDieserSeite } from "@/components/shell/AufDieserSeite";
 import {
   EinstellungenDialog,
@@ -41,8 +40,8 @@ import { useStep } from "@/lib/ohmtools/steps";
 // Die Einstellungen sind breit ein Dialog, kompakt eine Seite an Stelle der
 // Ansicht, am Handy der Tab.
 // Bewegung (`@/lib/bewegung`, `@/lib/ohmtools/motion`): die nächste Seite
-// oder der Tab rechts davon kommt von rechts, die vorige von links; „Mit
-// Ergänzungen | Nur Original“ blendet die Seite neu ein; die Spalte rechts
+// oder der Tab rechts davon kommt von rechts, die vorige von links; die
+// andere Ansicht (Einstellungen) blendet die Seite neu ein; die Spalte rechts
 // gleitet herein (`panel`), die Seite der Einstellungen kommt von rechts
 // (`forward`, `back`); ein Sprung innerhalb der Seite scrollt sanft. Blatt
 // und Dialog bewegen sich wie in den Apps (`ui/sheet.tsx`, `ui/dialog.tsx`).
@@ -236,14 +235,11 @@ export function App() {
           ) : (
             <>
               {/* Unter `md:` steht „Kapitel 2 / 3“ über der Seite, sonst passen
-                  Titel, Tabs und Knöpfe nicht in die Zeile */}
+                  Titel und Knöpfe nicht in die Zeile */}
               <span className="hidden md:inline-flex">
                 <KapitelBadge seite={seite} />
               </span>
               <span className="flex-1" />
-              <span className="shrink-0">
-                <AnsichtTabs mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
-              </span>
               <div className="flex shrink-0 gap-2">
                 {stufe === "compact" && (
                   <Button
