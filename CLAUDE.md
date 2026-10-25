@@ -98,8 +98,11 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Seite über Kopf und Spalten (`SettingsPage`, der Rest `inert`, sie kommt
   von rechts und geht dorthin zurück), am Handy im Tab dieselbe Liste ohne
   Pfeil zurück, denn sie ist die Wurzel des Tabs; jeder Abschnitt eine Seite
-  mit Pfeil zurück. Abschnitte „Ansicht“ (Mit Ergänzungen / Nur Original,
-  Hinweis zu hell und dunkel) und „Über dieses Skript“.
+  mit Pfeil zurück. Abschnitt „Über dieses Skript“ (mit dem Hinweis zu hell
+  und dunkel), am Handy davor „Ansicht“ (Mit Ergänzungen / Nur Original):
+  Die Ansicht steht nie doppelt, breit und kompakt nur als Tabs im Kopf, am
+  Handy, dessen Kopf keinen Platz dafür hat, nur in den Einstellungen
+  (Entscheidung des Nutzers, 2026-10-25).
 - Eine Seite pro Kapitel mit „Zurück/Weiter“ (Wunsch des Nutzers), danach
   eine eigene Seite „Wiederholungsfragen“ (`#/{kapitel}/wiederholungsfragen`):
   `KapitelSeite` rendert dort das ganze Kapitel und zeigt nur den Block

@@ -339,19 +339,10 @@ export function App() {
           </PanelSheet>
         )}
         {stufe === "wide" && (
-          <EinstellungenDialog
-            offen={einstellungen}
-            onSchliessen={() => setEinstellungen(false)}
-            mitErgaenzungen={mitErgaenzungen}
-            onChange={setMitErgaenzungen}
-          />
+          <EinstellungenDialog offen={einstellungen} onSchliessen={() => setEinstellungen(false)} />
         )}
         {stufe === "compact" && einstellungen && (
-          <EinstellungenSeite
-            onSchliessen={() => einstellungenUmschalten(false)}
-            mitErgaenzungen={mitErgaenzungen}
-            onChange={setMitErgaenzungen}
-          />
+          <EinstellungenSeite onSchliessen={() => einstellungenUmschalten(false)} />
         )}
       </div>
     </AnsichtContext.Provider>
