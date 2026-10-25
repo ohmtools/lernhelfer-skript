@@ -69,10 +69,15 @@ dir einer unklar, lies dort die Stelle, die ihn benutzt.
 4. **Abbildungen des Originals bleiben Bilder.** Eine eigene, gezeichnete
    oder interaktive Fassung kommt zusätzlich als `:::grafik` oder
    `:::interaktiv`, nie statt des Bilds.
-5. **Ergänzungen sind knapp und lassen Denken übrig.** Eine Anmerkung hat
-   höchstens etwa fünf Sätze. Wo der Leser etwas selbst herausfinden kann,
-   nimm `:::denkanstoss` statt einer fertigen Erklärung.
-6. **Jede Ergänzung stimmt.** Rechne Zahlen nach, bevor sie in eine
+5. **Ergänzungen sind knapp und helfen beim Verstehen.** Eine Anmerkung hat
+   höchstens etwa fünf Sätze und erklärt, was man zum Verstehen und Anwenden
+   des Stoffs braucht. Randinformationen wie Geschichte, Personen,
+   Jahreszahlen, die Herkunft eines Namens oder Nebenwissen aus dem Web
+   lässt du weg.
+6. **Fragen nur am Kapitelende.** Alle Fragen stehen gesammelt nach dem
+   letzten Originaltext (Kapitel 8). Im Kapitel steht keine, auch nicht in
+   einer Anmerkung oder unter einem Element zum Ausprobieren.
+7. **Jede Ergänzung stimmt.** Rechne Zahlen nach, bevor sie in eine
    Ergänzung kommen, und nenne zu fachlichen Aussagen die Fundstelle, z.B.
    `(skript.pdf, S. 12)`.
 
@@ -118,8 +123,8 @@ Wie schnell der Kondensator lädt: Nach τ ist er zu etwa 63 % geladen.
   steigen. Die Seite zeigt daraus „Seite 12 im Original“ und den
   Seitenbereich des Kapitels.
 - Wiederholungsfragen stehen gesammelt am Ende des Kapitels, nach dem letzten
-  Originaltext (Kapitel 8). Ein Kapitel ohne Lernstoff (z.B. Literatur,
-  Anhang, Verzeichnisse) hat keine.
+  Originaltext (Kapitel 8). Sonst steht im Kapitel keine Frage. Ein Kapitel
+  ohne Lernstoff (z.B. Literatur, Anhang, Verzeichnisse) hat keine.
 
 ---
 
@@ -225,16 +230,15 @@ und Autor stehen nur hier, die Gliederung zeigt die Seite selbst.
 
 Ergänzungen schreibst du als Markierungen mit drei Doppelpunkten. Sie
 erscheinen als Block im Text: oben das rote Badge „Ergänzung“ und der Titel,
-darunter eine rote Linie. „Nur Original“ blendet sie aus. Innen steht
-normales Markdown mit Formeln.
+darunter eine rote Linie, am Ende eine rote Linie mit „Ende der Ergänzung“.
+„Nur Original“ blendet sie aus. Innen steht normales Markdown mit Formeln.
 
 | Markierung | Wofür |
 |---|---|
 | `:::variablen` | Direkt nach jeder Gleichung, deren Symbole der Text dort nicht erklärt: jedes Symbol mit Bedeutung und Einheit. |
 | `:::anmerkung[Titel]` | Fehlender Zwischenschritt, Anschauung, Zusammenhang, Erklärung einer Abbildung (Titel z.B. „Zur Abbildung 3.2“). Titel freiwillig. |
-| `:::denkanstoss[Frage]` | Eine Frage zum Selbstdenken; der Inhalt ist die Auflösung, verdeckt bis „Antwort zeigen“. |
 | `:::grafik[Titel]` | Eine eigene Grafik aus Bausteinen (Kapitel 9 bis 11), darunter ein, zwei Sätze. |
-| `:::interaktiv[Titel]` | Etwas zum Ausprobieren mit Reglern (Kapitel 12), darunter ein Satz „Probier: …“. |
+| `:::interaktiv[Titel]` | Etwas zum Ausprobieren mit Reglern (Kapitel 12), darunter ein Satz „Probier: …“: was der Leser einstellt und was er dabei sieht, ohne Frage. |
 | `:anm[…]` | Ein kurzer Hinweis zu einem Wort, direkt dahinter ohne Leerzeichen, z.B. `Widerstand:anm[der Wert R, nicht das Bauteil]`: Das Wort wird rot gepunktet unterstrichen und öffnet den Hinweis. |
 
 ```markdown
@@ -252,26 +256,44 @@ $$
 Je voller der Kondensator, desto kleiner die Spannung am Widerstand und damit
 der Ladestrom. (skript.pdf, S. 3)
 :::
-
-:::denkanstoss[Was passiert, wenn R gegen null geht?]
-$\tau \to 0$: Der Kondensator wäre sofort geladen, der Ladestrom unendlich groß.
-:::
 ```
 
 - Eine Markierung endet mit `:::` in einer eigenen Zeile.
 - `:anm` hängt direkt am Wort davor (ohne Leerzeichen) oder steht nach einem
   Leerzeichen; der Text darin ist kurz und ohne Formeln mit `]`.
 - Andere Namen gibt es nicht; `npm run pruefen` meldet unbekannte.
+- `:::denkanstoss[Frage]` (eine Frage mit verdeckter Auflösung) gibt es nur
+  noch, damit ältere Seiten weiter gebaut werden. Schreib keinen neuen,
+  denn Fragen stehen nur am Kapitelende (Kapitel 2, Regel 6).
 
 ---
 
 ## 8. Fragen
 
 Wiederholungsfragen fragen das Kapitel aus dem Gedächtnis ab: kurz, ohne
-neues Wissen, nicht trivial. Sie stehen gesammelt am Ende des Kapitels, drei
-bis acht, je nach Länge, und decken seine wichtigsten Abschnitte ab. Die
+neues Wissen, nicht trivial, nur zu dem, was man zum Verstehen und Anwenden
+braucht. Sie sind die einzigen Fragen des Kapitels, stehen gesammelt an
+seinem Ende und verteilen sich über seine wichtigsten Abschnitte. Die
 meisten fragen nach Verständnis (`:::frage`, `:::auswahl`), höchstens ein
-Drittel sind Rechenfragen (`:::rechnen`). Die Webseite zeigt sie auf einer
+Drittel sind Rechenfragen (`:::rechnen`).
+
+Wie viele es sind, richtet sich nach der Zeit: Das Beantworten braucht etwa
+ein Drittel der Zeit, die der Leser für das Kapitel braucht, um es zu lesen,
+darüber nachzudenken und Aufgaben des Originals zu bearbeiten, mindestens
+aber eine Frage. Richtwerte:
+
+| Was | Minuten |
+|---|---|
+| Eine Seite Fließtext lesen und durchdenken | 2 |
+| Eine Seite mit Formeln oder Herleitungen | 4 |
+| Eine Aufgabe des Originals | geschätzte Zeit zum Lösen |
+| Eine `:::auswahl` beantworten | 1 |
+| Eine `:::frage` beantworten | 2 |
+| Eine `:::rechnen` beantworten | 3 bis 5 |
+
+Ein Kapitel aus einer Seite Fließtext (2 Minuten) bekommt also eine
+Auswahlfrage, eins aus zehn Seiten mit Formeln (40 Minuten) Fragen für etwa
+13 Minuten, z.B. sechs bis acht. Die Webseite zeigt sie auf einer
 eigenen Seite „Wiederholungsfragen“ nach dem Kapitel, nummeriert und mit
 ihrer Art („Erklären“, „Auswahl“, „Rechnen“). Die Antwort bleibt verdeckt,
 bis der Leser sie aufdeckt.
@@ -501,7 +523,7 @@ selben Block nimmt statt einer festen Angabe auch eine **Funktion der Werte**:
   <Zeiger betrag={({ i }) => i[2]} winkel={240} name="$B_c$" />
   <Zeiger betrag={1.5} winkel={({ t, w }) => (w * t * 180) / Math.PI} name="$B$" />
 </Zeigerdiagramm>
-Probier: Spiel die Animation ab. Wie lang ist der Zeiger $B$, und wie schnell dreht er sich? (Beispielwerte, nicht aus dem Skript)
+Probier: Spiel die Animation ab. Der Zeiger $B$ behält seine Länge und dreht sich einmal pro Periode der Ströme. (Beispielwerte, nicht aus dem Skript)
 :::
 ```
 
@@ -514,7 +536,7 @@ Probier: Spiel die Animation ab. Wie lang ist der Zeiger $B$, und wie schnell dr
   <Kurve f={(t, { R, C }) => 1 - Math.exp(-t / (R * C))} name="$u_C/U_0$" />
   <Punkt x={({ R, C }) => R * C} y={0.632} text="$\tau$" />
 </Funktionsgraph>
-Probier: Verdopple $R$ oder $C$. Wohin wandert der Punkt bei $\tau$?
+Probier: Verdopple $R$ oder $C$. Der Punkt bei $\tau$ wandert zur doppelten Zeit.
 :::
 ```
 
@@ -564,7 +586,6 @@ der Text („Probier: …“). Die Reihenfolge im Quelltext ist dafür egal.
 | Gleichung des Originals | `$$ … \tag{} $$`, danach `:::variablen` |
 | Fehlender Zwischenschritt, Anschauung | `:::anmerkung` |
 | Abbildung des Originals erklären | `:::anmerkung[Zur Abbildung …]` |
-| Etwas, das der Leser selbst herausfinden kann | `:::denkanstoss` |
 | Kurzer Begriff im Satz | `:anm[…]` |
 | Kapitelende | `:::frage`, `:::auswahl`, `:::rechnen` |
 | Abbildung mit Teilbildern (a), (b) | `:::abbildung` |
@@ -609,9 +630,12 @@ der Text („Probier: …“). Die Reihenfolge im Quelltext ist dafür egal.
 - [ ] Jede Gleichung mit unerklärten Symbolen hat `:::variablen`.
 - [ ] Jede Abbildung des Originals als Bild mit Originalunterschrift, dazu
       eine Erklärung.
-- [ ] Jedes Kapitel mit Lernstoff endet mit drei bis acht
-      Wiederholungsfragen, höchstens ein Drittel davon Rechenfragen; jede
-      falsche Option einer Auswahlfrage hat ihre eigene Erklärung.
+- [ ] Jedes Kapitel mit Lernstoff endet mit Wiederholungsfragen für etwa
+      ein Drittel seiner Lese- und Bearbeitungszeit (Kapitel 8), höchstens
+      ein Drittel davon Rechenfragen; jede falsche Option einer
+      Auswahlfrage hat ihre eigene Erklärung.
+- [ ] Keine Frage im Kapitel außer den Wiederholungsfragen am Ende, keine
+      Randinformationen in den Ergänzungen.
 - [ ] Was sich im Original bewegt oder zeitlich ändert, läuft als
       Animation (`Regler art="zeit"`).
 - [ ] Ergänzungen knapp, nachgerechnet, mit Fundstelle.

@@ -28,7 +28,13 @@ Datei.
   Nutzer und ändert die Fähigkeit mit.
 - `ANLEITUNG.md` beschreibt jeden Baustein, und das Beispiel in
   `src/inhalt/` benutzt jeden. Ein neuer Baustein kommt in
-  `src/primitiven/index.ts`, `ANLEITUNG.md` und das Beispiel.
+  `src/primitiven/index.ts`, `ANLEITUNG.md` und das Beispiel. Ausnahme:
+  `:::denkanstoss` bleibt nur für alte Quell-ZIPs, die Anleitung sagt, ihn
+  nicht mehr zu schreiben, und das Beispiel benutzt ihn nicht.
+- Fragen stehen nur gesammelt am Kapitelende, so viele, dass sie etwa ein
+  Drittel der Lese- und Bearbeitungszeit des Kapitels brauchen (Richtwerte
+  in `ANLEITUNG.md`, Kapitel 8, und in der Fähigkeit). Ergänzungen helfen
+  beim Verstehen, ohne Randinformationen. Das Beispiel hält sich daran.
 
 ## Design
 
@@ -45,8 +51,9 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Kopien aus `ohmtools/design`; eigenes CSS (Shiki- und Mafs-Variablen auf
   Tokens, Formelnummern) steht am Ende von `src/index.css`.
 - Rot heißt „ergänzt“: Jede Ergänzung ist ein Block im Text (nie am Rand)
-  mit rotem Badge „Ergänzung“, Titel und roter Linie darunter (Farbe nie
-  einziger Hinweis), keine Kästen; `:anm` unterstreicht das Wort davor rot
+  mit rotem Badge „Ergänzung“, Titel und roter Linie darunter, am Ende eine
+  rote Linie mit „Ende der Ergänzung“ (Farbe nie einziger Hinweis), keine
+  Kästen; `:anm` unterstreicht das Wort davor rot
   gepunktet und öffnet ein Popover. Originaltext bleibt ohne Rot. Die erste
   Kurve eines Graphen in `--kurve` (chart-3 hell, chart-2 dunkel), weitere
   in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
