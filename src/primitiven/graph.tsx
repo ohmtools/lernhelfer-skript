@@ -12,6 +12,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Coordinates, Line, Mafs, Plot, Point, Vector } from "mafs";
+import { cn } from "cn";
 import { zahl } from "@/lib/format";
 import { useExperiment, useWert, type Werte, type Wertbar } from "@/primitiven/experiment";
 import { Gemischt, type Anker } from "@/primitiven/flaeche";
@@ -61,16 +62,25 @@ function schritt(spanne: number) {
   return [1, 2, 2.5, 5, 10].map((f) => f * zehner).find((s) => s >= roh) ?? roh;
 }
 
+/** Klasse für Namen an Bezugslinien: Wörter und Zahlen in Geist Mono 12 px, Formeln bleiben. */
+const BEZUG = (text: string) =>
+  !text.includes("$") && !/[\\_^{}]/.test(text)
+    ? "font-mono text-xs leading-none"
+    : "[&>span:not(:has(.katex))]:font-mono [&>span:not(:has(.katex))]:text-xs [&>span:not(:has(.katex))]:leading-none";
+
 function GraphText({
   bei,
   text,
   anker = "oben rechts",
   farbe,
+  bezug = false,
 }: {
   bei: [number, number];
   text: string;
   anker?: Anker;
   farbe?: string;
+  /** Name einer Bezugslinie (`Hilfslinie`, gestrichelte `Kurve`): in Mono. */
+  bezug?: boolean;
 }) {
   const g = useContext(GraphContext);
   if (!g?.ebene) return null;
@@ -90,7 +100,7 @@ function GraphText({
   const dy = anker.includes("oben") ? -5 : anker.includes("unten") ? 5 : 0;
   return createPortal(
     <span
-      className="absolute leading-none whitespace-nowrap"
+      className={cn("absolute leading-none whitespace-nowrap", bezug && BEZUG(text))}
       style={{
         left: x + dx,
         top: y + dy,
@@ -214,7 +224,13 @@ export function Kurve({ f, name, bereich, nummer = 0 }: KurveProps) {
         svgPathProps={stil.strich ? { strokeDasharray: stil.strich } : undefined}
       />
       {name && Number.isFinite(yEnde) && (
-        <GraphText bei={[ende, yEnde]} text={name} anker="oben links" farbe={stil.farbe} />
+        <GraphText
+          bei={[ende, yEnde]}
+          text={name}
+          anker="oben links"
+          farbe={stil.farbe}
+          bezug={!!stil.strich}
+        />
       )}
     </>
   );
@@ -296,7 +312,7 @@ export function Hilfslinie({
       ) : (
         <Line.PointAngle point={a} angle={rad} color={farbe} style="dashed" weight={1} />
       )}
-      {t && <GraphText bei={b} text={t} anker={anker ?? (richtung as Anker)} />}
+      {t && <GraphText bei={b} text={t} anker={anker ?? (richtung as Anker)} bezug />}
     </>
   );
 }
