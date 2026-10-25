@@ -47,14 +47,31 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 ändern soll, wird zuerst dort geändert, für alle Apps. Referenz ist
 `ohmtools/zeiteisen`.
 
-- `components.json` und der Theme-Teil von `src/index.css` sind unveränderte
-  Kopien aus `ohmtools/design`; eigenes CSS (Shiki- und Mafs-Variablen auf
-  Tokens, Formelnummern) steht am Ende von `src/index.css`.
+- Was das Design teilt, ist eine unveränderte Kopie aus `ohmtools/design`
+  (`npx --yes github:ohmtools/design add --force <name>…`, erste Zeile mit
+  der Quelle, nie hier bearbeiten, auch nicht vom Formatierer oder Linter):
+  `components.json`, das ganze CSS des Designs in `src/styles/ohmtools.css`
+  (Theme, Stufen, `popup-glass`, View Transitions, reduzierte Bewegung),
+  shadcns Komponenten in `src/components/ui/` außer `badge`, `radio-group`,
+  `slider` und `table` (`NOTES.md` dort), `src/components/ohmtools/`
+  (`SettingsDialog`, `SettingsPage`, `PanelSheet`, `PanelHeader`,
+  `ResponsivePopover` mit `PhoneDrawer`) und `src/lib/ohmtools/`
+  (`steps.ts`, `motion.ts`). `src/index.css` importiert das Stylesheet und
+  enthält nur eigenes CSS (Shiki- und Mafs-Variablen auf Tokens,
+  Formelnummern, `erscheinen`). Die Elementgruppen `AppShell`, `Panel`,
+  `Area` und `Views` benutzt die Seite nicht, weil ihre Schale nach
+  „Reading pages“ anders ist (Kapitel links, 280 px rechts, Einstellungen als
+  Tab ohne Pfeil zurück), `Popup` nicht, weil es Menü, Auswahl und Rückfrage
+  mitbringt (etwa 80 kB mehr in der einen Datei); sie baut sich aus den
+  Teilen darunter. `theme-provider.tsx` bleibt eigen, weil er beim Drucken
+  hell schaltet.
 - Rot heißt „ergänzt“: Jede Ergänzung ist ein Block im Text (nie am Rand)
   mit rotem Badge „Ergänzung“, Titel und roter Linie darunter, am Ende eine
   rote Linie mit „Ende der Ergänzung“ (Farbe nie einziger Hinweis), keine
   Kästen; `:anm` unterstreicht das Wort davor rot
-  gepunktet und öffnet ein Popover. Originaltext bleibt ohne Rot. Die erste
+  gepunktet und öffnet die Anmerkung, ab kompakt als Popover, am Handy als
+  Drawer von unten (`ResponsivePopover`; DESIGN.md, „Elements by step“:
+  keine Popups am Handy). Originaltext bleibt ohne Rot. Die erste
   Kurve eines Graphen in `--kurve` (chart-3 hell, chart-2 dunkel), weitere
   in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
   Millimeterpapier wie im Übungsblatt.
@@ -64,39 +81,41 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Original“ und die Knöpfe „Inhalt“ (nur kompakt), „Auf dieser Seite“ (nicht
   bei den Wiederholungsfragen, die keine Abschnitte haben) und
   „Einstellungen“. Drei Stufen wie in den Apps (Entscheidung des Nutzers,
-  2026-10-25; `src/lib/stufe.ts` mit denselben Abfragen wie `compact:` und
-  `wide:`):
+  2026-10-25; `useStep()` aus `src/lib/ohmtools/steps.ts` mit denselben
+  Abfragen wie `compact:` und `wide:`, breit ab 64rem und 700 px Höhe):
   - breit (`wide:`): drei Spalten in einem Viewport, jede scrollt für sich
     (Suche und Kapitel 280 px, Seite höchstens 720 px mit 56 px Rand, rechts
     „Auf dieser Seite“ 280 px, schließbar, beim Start erst ab 80rem offen).
   - kompakt (`compact:`): eine Spalte (Seite höchstens 720 px mit 24 px
     Rand), alles in der Kopfzeile, keine Leiste. „Inhalt“ (Suche und
     Kapitel wie am Handy) und „Auf dieser Seite“ sind ein Blatt von rechts,
-    380 px (`Blatt.tsx` wie zeiteisens `PanelSheet`); eine Wahl darin
-    schließt es und geht dorthin.
+    380 px (`PanelSheet` mit `PanelHeader`); eine Wahl darin schließt es
+    und geht dorthin.
   - schmal: eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“
     (Tabs); die Seite bleibt beim Tabwechsel eingehängt.
-- Einstellungen wie in den Apps (`Einstellungen.tsx`, zeiteisens
-  `SettingsPage.tsx`): ab kompakt ein Dialog bis 1000 × 720 mit den
-  Abschnitten links, am Handy im Tab eine Seite mit den Abschnitten als
-  Zeilen, jeder eine Seite mit Pfeil zurück. Abschnitte „Ansicht“ (Mit
-  Ergänzungen / Nur Original, Hinweis zu hell und dunkel) und „Über dieses
-  Skript“.
+- Einstellungen wie in den Apps (`Einstellungen.tsx`): breit der Dialog
+  bis 1000 × 720 mit den Abschnitten links (`SettingsDialog`), kompakt eine
+  Seite über Kopf und Spalten (`SettingsPage`, der Rest `inert`, sie kommt
+  von rechts und geht dorthin zurück), am Handy im Tab dieselbe Liste ohne
+  Pfeil zurück, denn sie ist die Wurzel des Tabs; jeder Abschnitt eine Seite
+  mit Pfeil zurück. Abschnitte „Ansicht“ (Mit Ergänzungen / Nur Original,
+  Hinweis zu hell und dunkel) und „Über dieses Skript“.
 - Eine Seite pro Kapitel mit „Zurück/Weiter“ (Wunsch des Nutzers), danach
   eine eigene Seite „Wiederholungsfragen“ (`#/{kapitel}/wiederholungsfragen`):
   `KapitelSeite` rendert dort das ganze Kapitel und zeigt nur den Block
   `Fragen` (`data-fragen`). Suche über alle Kapitel (minisearch, Export
   `suchtext`: Original und Ergänzungen getrennt, die Fragen als eigener
   Abschnitt).
-- Bewegung wie in zeiteisen, ohne Bibliothek (`src/lib/bewegung.ts`, CSS am
-  Ende von `src/index.css`): die nächste Seite oder der Tab rechts davon
-  kommt von rechts, die vorige von links (Web Animations API, `main` schneidet
-  dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet die Seite neu
-  ein; „Auf dieser Seite“ gleitet breit per View Transition herein und
-  hinaus, Blatt und Dialog bewegen sich wie in den Apps (`ui/sheet.tsx`,
-  `ui/dialog.tsx`), die Abschnitte der Einstellungen am Handy kommen von
-  rechts und gehen nach links zurück; ein Sprung innerhalb der Seite scrollt
-  sanft; Aufgedecktes (Antworten, Urteile, Rückmeldungen) und die Abschnitte
+- Bewegung wie in den Apps, ohne Bibliothek (`transition()` und Kurve aus
+  `src/lib/ohmtools/motion.ts`, `hereinschieben` in `src/lib/bewegung.ts`,
+  `erscheinen` in `src/index.css`): die nächste Seite oder der Tab rechts
+  davon kommt von rechts, die vorige von links (Web Animations API, `main`
+  schneidet dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet
+  die Seite neu ein; „Auf dieser Seite“ gleitet breit per View Transition
+  herein und hinaus, Blatt und Dialog bewegen sich wie in den Apps
+  (`ui/sheet.tsx`, `ui/dialog.tsx`), die Seite der Einstellungen (kompakt)
+  und ihre Abschnitte kommen von rechts und gehen nach rechts zurück; ein
+  Sprung innerhalb der Seite scrollt sanft; Aufgedecktes (Antworten, Urteile, Rückmeldungen) und die Abschnitte
   im Kapitelbaum erscheinen mit `erscheinen`. Bei `prefers-reduced-motion`
   bewegt sich nichts.
 - Sprung zu einem Abschnitt einer anderen Seite: `festhalten` in `App.tsx`
@@ -106,14 +125,13 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   waagrecht scrollende Block darin (Formeln, Tabellen, Code) ist `relative`,
   sonst verlängern absolut gesetzte Elemente (`sr-only`) das Dokument und
   `scrollIntoView` schiebt den Kopf weg.
-- Abweichungen von DESIGN.md, weil die Seite eine Datei ist: Das
-  Dunkelmodus-Skript steht inline in `index.html` (DESIGN.md will
-  `public/dark.js` wegen der CSP, die es im Artefakt nicht gibt). Die
-  Oberfläche ist nur Deutsch, weil die Skripte deutsch sind; kein Logo und
-  keine Version (die Seite ist ein Dokument, keine App).
-- Prüfung: `npx --yes github:ohmtools/design check src/index.css components.json src/components/ui/*.tsx src/components/shell/*.tsx src/primitiven/*.tsx` (läuft in der CI).
-- Sichtbare Änderungen bei 360, 400, 568 × 320, 768 × 1024, 844 × 390 und
-  1440 px, hell und dunkel prüfen
+- Weil die Seite eine Datei ohne eigene CSP ist, steht das
+  Dunkelmodus-Skript inline in `index.html` (DESIGN.md, „Light and dark“).
+  Die Oberfläche ist nur Deutsch, weil die Skripte deutsch sind; kein Logo
+  und keine Version (die Seite ist ein Dokument, keine App).
+- Prüfung: `npx --yes github:ohmtools/design check src/index.css src/styles/ohmtools.css components.json src/components/ui/*.tsx src/components/ohmtools/*.tsx src/components/shell/*.tsx src/lib/ohmtools/*.ts src/primitiven/*.tsx` (läuft in der CI).
+- Sichtbare Änderungen bei 360, 400, 568 × 320, 768 × 1024, 834 × 1194,
+  844 × 390 und 1440 px, hell und dunkel prüfen
   (Playwright mit Chromium, `dist/index.html` über `file://`).
 
 ## Aufbau

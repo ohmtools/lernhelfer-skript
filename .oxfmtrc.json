@@ -1,3 +1,10 @@
 {
-  "ignorePatterns": ["**/*.md", "**/*.mdx", "src/components/ui/**"]
+  "ignorePatterns": [
+    "**/*.md",
+    "**/*.mdx",
+    "src/components/ui/**",
+    "src/components/ohmtools/**",
+    "src/lib/ohmtools/**",
+    "src/styles/**"
+  ]
 }

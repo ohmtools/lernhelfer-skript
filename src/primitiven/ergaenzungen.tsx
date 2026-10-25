@@ -10,7 +10,7 @@ import {
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ResponsivePopover } from "@/components/ohmtools/responsive-popover";
 import { useAnsicht } from "@/lib/ansicht";
 import { ExperimentBereich } from "@/primitiven/experiment";
 import { Fehlergrenze } from "@/primitiven/Fehlergrenze";
@@ -181,8 +181,9 @@ export const AnmWort = ({ children }: { children: ReactNode }) => <>{children}</
 
 /**
  * Anmerkung zu einem Wort, `Oszilloskop:anm[Ein Messgerät …]`: Das Wort ist
- * rot gepunktet unterstrichen und öffnet die Anmerkung. Bei „Nur Original“
- * bleibt nur das Wort.
+ * rot gepunktet unterstrichen und öffnet die Anmerkung, ab `compact:` als
+ * Popover am Wort, am Handy als Drawer von unten (DESIGN.md, „Elements by
+ * step“). Bei „Nur Original“ bleibt nur das Wort.
  */
 export function AnmInline({ children }: { children: ReactNode }) {
   const { mitErgaenzungen } = useAnsicht();
@@ -191,25 +192,25 @@ export function AnmInline({ children }: { children: ReactNode }) {
   const text = kinder.filter((k) => !(isValidElement(k) && k.type === AnmWort));
   if (!mitErgaenzungen) return <>{wort}</>;
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <button
-            type="button"
-            className="cursor-pointer border-b-[1.5px] border-dotted border-red leading-[inherit] hover:border-solid"
-          />
-        }
-      >
-        {wort.length ? wort : <span className="text-sm text-muted-foreground">Anmerkung</span>}
-      </PopoverTrigger>
-      <PopoverContent className="w-70 text-sm leading-5">
-        <span className="mb-1 flex items-center gap-2">
-          <ErgaenzungBadge />
-          <span className="font-semibold">Anmerkung</span>
-        </span>
-        {text}
-      </PopoverContent>
-    </Popover>
+    <ResponsivePopover
+      title="Anmerkung"
+      titleHidden
+      className="text-sm leading-5 compact:w-70"
+      trigger={
+        <button
+          type="button"
+          className="cursor-pointer border-b-[1.5px] border-dotted border-red leading-[inherit] hover:border-solid"
+        >
+          {wort.length ? wort : <span className="text-sm text-muted-foreground">Anmerkung</span>}
+        </button>
+      }
+    >
+      <span className="mb-1 flex items-center gap-2">
+        <ErgaenzungBadge />
+        <span className="font-semibold">Anmerkung</span>
+      </span>
+      {text}
+    </ResponsivePopover>
   );
 }
 
