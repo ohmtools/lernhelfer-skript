@@ -113,7 +113,7 @@ export function Zeitdiagramm({
   );
   return (
     <figure className="my-4">
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <div
           className="mx-auto grid w-max grid-cols-[auto_auto] items-center gap-x-4 text-sm"
           style={{ rowGap: ABSTAND }}

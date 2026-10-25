@@ -52,7 +52,7 @@ export const blockquote = (p: ComponentProps<"blockquote">) => (
 );
 export const hr = () => <hr className="my-8" />;
 export const table = (p: ComponentProps<"table">) => (
-  <div className="my-6 overflow-x-auto">
+  <div className="relative my-6 overflow-x-auto">
     <table {...p} className="w-full border-collapse text-sm" />
   </div>
 );
@@ -71,7 +71,7 @@ export const pre = ({ className, style, ...p }: ComponentProps<"pre">) => (
     {...p}
     style={{ ...style, backgroundColor: "transparent" }}
     className={cn(
-      "my-6 overflow-x-auto border-y py-3 font-mono text-[13px] leading-relaxed",
+      "relative my-6 overflow-x-auto border-y py-3 font-mono text-[13px] leading-relaxed",
       className,
     )}
   />

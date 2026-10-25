@@ -39,7 +39,7 @@ export function Formel({ html, block }: { html: string; block?: boolean }) {
   if (block) {
     return (
       <div
-        className="my-4 overflow-x-auto overflow-y-hidden py-1"
+        className="relative my-4 overflow-x-auto overflow-y-hidden py-1"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

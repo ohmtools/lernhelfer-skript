@@ -76,7 +76,8 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 - Sprung zu einem Abschnitt einer anderen Seite: `festhalten` in `App.tsx`
   richtet ihn höchstens eine Sekunde lang neu aus, bis sich die Seite gesetzt
   hat (Zeichenflächen und Graphen werden nach dem Einhängen kleiner), und
-  hört auf, sobald der Nutzer scrollt. Jede scrollende Spalte ist `relative`,
+  hört auf, sobald der Nutzer scrollt. Jede scrollende Spalte und jeder
+  waagrecht scrollende Block darin (Formeln, Tabellen, Code) ist `relative`,
   sonst verlängern absolut gesetzte Elemente (`sr-only`) das Dokument und
   `scrollIntoView` schiebt den Kopf weg.
 - Abweichungen von DESIGN.md, weil die Seite eine Datei ist: Das

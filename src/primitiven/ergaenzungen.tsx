@@ -124,7 +124,7 @@ export function Variablen({ id, titel, children }: BlockProps) {
   return (
     <Ergaenzung id={id} titel={titel ?? "Variablen"} className="text-sm">
       {zeilen.length > 0 && (
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b text-left">
