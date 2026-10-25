@@ -52,14 +52,29 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
   Millimeterpapier wie im Übungsblatt.
 - Kopf (56 px, auf niedrigen Querformat-Bildschirmen `short:` 48 px, dazu der
-  sichere Bereich oben): Titel, „Kapitel 2 / 3“, Tabs „Mit Ergänzungen | Nur
-  Original“ und die Knöpfe „Auf dieser Seite“ (nicht bei den
-  Wiederholungsfragen, die keine Abschnitte haben) und „Einstellungen“.
-  `wide:`: drei Spalten in einem Viewport, jede scrollt für sich (Suche und Kapitel
-  280 px, Seite höchstens 720 px, rechts „Auf dieser Seite“ 280 px oder das
-  Panel „Einstellungen“ 340 px; „Auf dieser Seite“ ist beim Start erst ab
-  80rem offen). Darunter eine Spalte und die Leiste „Skript | Inhalt |
-  Einstellungen“ (Tabs).
+  sichere Bereich oben): Titel, „Kapitel 2 / 3“ (erst ab `md:`, darunter
+  über der Seite, sonst passt die Zeile nicht), Tabs „Mit Ergänzungen | Nur
+  Original“ und die Knöpfe „Inhalt“ (nur kompakt), „Auf dieser Seite“ (nicht
+  bei den Wiederholungsfragen, die keine Abschnitte haben) und
+  „Einstellungen“. Drei Stufen wie in den Apps (Entscheidung des Nutzers,
+  2026-10-25; `src/lib/stufe.ts` mit denselben Abfragen wie `compact:` und
+  `wide:`):
+  - breit (`wide:`): drei Spalten in einem Viewport, jede scrollt für sich
+    (Suche und Kapitel 280 px, Seite höchstens 720 px mit 56 px Rand, rechts
+    „Auf dieser Seite“ 280 px, schließbar, beim Start erst ab 80rem offen).
+  - kompakt (`compact:`): eine Spalte (Seite höchstens 720 px mit 24 px
+    Rand), alles in der Kopfzeile, keine Leiste. „Inhalt“ (Suche und
+    Kapitel wie am Handy) und „Auf dieser Seite“ sind ein Blatt von rechts,
+    380 px (`Blatt.tsx` wie zeiteisens `PanelSheet`); eine Wahl darin
+    schließt es und geht dorthin.
+  - schmal: eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“
+    (Tabs); die Seite bleibt beim Tabwechsel eingehängt.
+- Einstellungen wie in den Apps (`Einstellungen.tsx`, zeiteisens
+  `SettingsPage.tsx`): ab kompakt ein Dialog bis 1000 × 720 mit den
+  Abschnitten links, am Handy im Tab eine Seite mit den Abschnitten als
+  Zeilen, jeder eine Seite mit Pfeil zurück. Abschnitte „Ansicht“ (Mit
+  Ergänzungen / Nur Original, Hinweis zu hell und dunkel) und „Über dieses
+  Skript“.
 - Eine Seite pro Kapitel mit „Zurück/Weiter“ (Wunsch des Nutzers), danach
   eine eigene Seite „Wiederholungsfragen“ (`#/{kapitel}/wiederholungsfragen`):
   `KapitelSeite` rendert dort das ganze Kapitel und zeigt nur den Block
@@ -70,10 +85,13 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Ende von `src/index.css`): die nächste Seite oder der Tab rechts davon
   kommt von rechts, die vorige von links (Web Animations API, `main` schneidet
   dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet die Seite neu
-  ein; das Panel rechts gleitet per View Transition herein und hinaus; ein
-  Sprung innerhalb der Seite scrollt sanft; Aufgedecktes (Antworten, Urteile,
-  Rückmeldungen) und die Abschnitte im Kapitelbaum erscheinen mit
-  `erscheinen`. Bei `prefers-reduced-motion` bewegt sich nichts.
+  ein; „Auf dieser Seite“ gleitet breit per View Transition herein und
+  hinaus, Blatt und Dialog bewegen sich wie in den Apps (`ui/sheet.tsx`,
+  `ui/dialog.tsx`), die Abschnitte der Einstellungen am Handy kommen von
+  rechts und gehen nach links zurück; ein Sprung innerhalb der Seite scrollt
+  sanft; Aufgedecktes (Antworten, Urteile, Rückmeldungen) und die Abschnitte
+  im Kapitelbaum erscheinen mit `erscheinen`. Bei `prefers-reduced-motion`
+  bewegt sich nichts.
 - Sprung zu einem Abschnitt einer anderen Seite: `festhalten` in `App.tsx`
   richtet ihn höchstens eine Sekunde lang neu aus, bis sich die Seite gesetzt
   hat (Zeichenflächen und Graphen werden nach dem Einhängen kleiner), und
@@ -87,7 +105,8 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Oberfläche ist nur Deutsch, weil die Skripte deutsch sind; kein Logo und
   keine Version (die Seite ist ein Dokument, keine App).
 - Prüfung: `npx --yes github:ohmtools/design check src/index.css components.json src/components/ui/*.tsx src/components/shell/*.tsx src/primitiven/*.tsx` (läuft in der CI).
-- Sichtbare Änderungen bei 360, 400, 844 × 390 und 1440 px, hell und dunkel prüfen
+- Sichtbare Änderungen bei 360, 400, 568 × 320, 768 × 1024, 844 × 390 und
+  1440 px, hell und dunkel prüfen
   (Playwright mit Chromium, `dist/index.html` über `file://`).
 
 ## Aufbau

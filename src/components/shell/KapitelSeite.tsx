@@ -49,7 +49,9 @@ export function KapitelSeite({
   return (
     // `text-base`: der Inhalt beginnt bei 16 px, auch abgesetzte Formeln (die
     // Wurzel der App setzt `text-sm`). Seitlich mindestens der sichere Bereich.
-    <article className="w-full max-w-180 pt-5 pr-[max(1rem,env(safe-area-inset-right))] pb-10 pl-[max(1rem,env(safe-area-inset-left))] text-base compact:pt-10 compact:pr-[max(3.5rem,env(safe-area-inset-right))] compact:pb-18 compact:pl-[max(3.5rem,env(safe-area-inset-left))]">
+    // Höchstens 720 px; seitlich 16 px am Handy, 24 px ab `compact:`, 56 px ab
+    // `wide:` (DESIGN.md, „Reading pages“, „Shell“).
+    <article className="w-full max-w-180 pt-5 pr-[max(1rem,env(safe-area-inset-right))] pb-10 pl-[max(1rem,env(safe-area-inset-left))] text-base compact:pt-10 compact:pr-[max(1.5rem,env(safe-area-inset-right))] compact:pb-18 compact:pl-[max(1.5rem,env(safe-area-inset-left))] wide:pr-[max(3.5rem,env(safe-area-inset-right))] wide:pl-[max(3.5rem,env(safe-area-inset-left))]">
       {seite.fragen ? (
         <>
           <p className="flex flex-wrap items-center gap-2.5 text-xs leading-5 text-muted-foreground">
@@ -87,7 +89,8 @@ export function KapitelSeite({
       ) : (
         <>
           <p className="flex flex-wrap items-center gap-2 text-xs leading-5 text-muted-foreground">
-            <span className="compact:hidden">
+            {/* Im Kopf erst ab `md:`, darunter passt er dort nicht neben die Tabs */}
+            <span className="md:hidden">
               <KapitelBadge seite={seite} />
             </span>
             {kapitel.seiten &&

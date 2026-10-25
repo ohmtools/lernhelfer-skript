@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { List, Search, Settings } from "lucide-react";
+import { BookOpen, List, Search, Settings } from "lucide-react";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { AnsichtTabs } from "@/components/shell/AnsichtTabs";
 import { AufDieserSeite } from "@/components/shell/AufDieserSeite";
-import { Einstellungen } from "@/components/shell/Einstellungen";
+import { Blatt } from "@/components/shell/Blatt";
+import { EinstellungenDialog, EinstellungenSeite } from "@/components/shell/Einstellungen";
 import { Kapitelbaum } from "@/components/shell/Kapitelbaum";
 import { KapitelBadge, KapitelSeite } from "@/components/shell/KapitelSeite";
 import { Suche } from "@/components/shell/Suche";
@@ -14,6 +15,7 @@ import { hereinschieben, uebergang, wenigBewegung } from "@/lib/bewegung";
 import { FRAGENSEITE, SEITEN, SKRIPT } from "@/lib/kapitel";
 import { useNavigation, type Ort } from "@/lib/navigation";
 import { RAND_X } from "@/lib/rand";
+import { useStufe } from "@/lib/stufe";
 
 // Ein Viewport, die Seite scrollt nie; jede Spalte scrollt für sich
 // (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px, auf niedrigen
@@ -22,16 +24,21 @@ import { RAND_X } from "@/lib/rand";
 // setzt `text-sm`, die Seite selbst `text-base`. Jede Spalte ist `relative`:
 // sonst beziehen sich absolut gesetzte Elemente darin (`sr-only`) auf das
 // Dokument, verlängern es, und `scrollIntoView` schiebt den Kopf weg.
-// - `wide:`: links Suche und Kapitel (280 px), Mitte die Seite (höchstens
-//   720 px), rechts „Auf dieser Seite“ (280 px) oder das Panel
-//   „Einstellungen“ (340 px), beide über Knöpfe im Kopf.
-// - darunter eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“.
+// Drei Stufen (`@/lib/stufe`, dieselben Abfragen wie `compact:`/`wide:`):
+// - breit (`wide:`): links Suche und Kapitel (280 px), Mitte die Seite
+//   (höchstens 720 px), rechts „Auf dieser Seite“ (280 px, schließbar).
+// - kompakt (`compact:`): eine Spalte, alles in der Kopfzeile; „Inhalt“ und
+//   „Auf dieser Seite“ als Blatt von rechts (380 px).
+// - schmal: eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“.
+// Die Einstellungen sind ab kompakt ein Dialog, am Handy der Tab.
 // Bewegung (`@/lib/bewegung`): die nächste Seite oder der Tab rechts davon
 // kommt von rechts, die vorige von links; „Mit Ergänzungen | Nur Original“
-// blendet die Seite neu ein; das Panel rechts gleitet herein; ein Sprung
-// innerhalb der Seite scrollt sanft.
+// blendet die Seite neu ein; die Spalte rechts gleitet herein; ein Sprung
+// innerhalb der Seite scrollt sanft. Blatt und Dialog bewegen sich wie in den
+// Apps (`ui/sheet.tsx`, `ui/dialog.tsx`).
 
-type Panel = "seite" | "einstellungen" | null;
+type Panel = "seite" | null;
+type BlattArt = "inhalt" | "seite";
 
 /** Die Tabs in der Reihenfolge der Leiste (`TabLeiste`), für die Richtung. */
 const REIHE: Tab[] = ["skript", "inhalt", "einstellungen"];
@@ -96,8 +103,15 @@ function startPanel(): Panel {
 
 export function App() {
   const { ort, gehe } = useNavigation();
-  const [tab, setTab] = useState<Tab>("skript");
+  const stufe = useStufe();
+  const [tabWahl, setTab] = useState<Tab>("skript");
+  // Die Leiste gibt es nur am Handy; sonst steht immer die Seite da.
+  const tab: Tab = stufe === "schmal" ? tabWahl : "skript";
   const [panel, setPanel] = useState<Panel>(startPanel);
+  const [blatt, setBlatt] = useState<BlattArt | null>(null);
+  // Was das Blatt zeigt; bleibt beim Schließen, bis es hinausgeglitten ist.
+  const [blattArt, setBlattArt] = useState<BlattArt>("inhalt");
+  const [einstellungen, setEinstellungen] = useState(false);
   const [mitErgaenzungen, setMitErgaenzungen] = useState(true);
   const [ziel, setZiel] = useState<Ort | null>(ort.abschnitt ? ort : null);
   const erledigt = useRef<Ort | null>(null);
@@ -113,12 +127,21 @@ export function App() {
   if (idsStabil.join() !== ids.join()) setIdsStabil(ids);
   const aktiv = useAktiverAbschnitt(idsStabil);
 
+  // Blatt und Dialog gehören zu ihrer Stufe: wechselt sie, schließen sie.
+  const [stufeZuletzt, setStufeZuletzt] = useState(stufe);
+  if (stufeZuletzt !== stufe) {
+    setStufeZuletzt(stufe);
+    if (stufe !== "kompakt") setBlatt(null);
+    if (stufe === "schmal") setEinstellungen(false);
+  }
+
   const hingehen = (neu: Ort) => {
     // Auf derselben Seite und schon sichtbar: dorthin scrollen statt springen.
     sanft.current =
       tab === "skript" && neu.kapitel === ort.kapitel && (neu.abschnitt === FRAGENSEITE) === fragen;
     gehe(neu);
     setTab("skript");
+    setBlatt(null);
     setZiel(neu);
   };
 
@@ -152,14 +175,18 @@ export function App() {
   if (!seite || !kapitel)
     return <p className="p-6 text-sm">Dieses Skript hat noch keine Kapitel.</p>;
 
-  const umschalten = (p: Panel) =>
-    uebergang("panel", () => setPanel((alt) => (alt === p ? null : p)));
-  const einstellungen = (schliessen?: () => void) => (
-    <Einstellungen
-      mitErgaenzungen={mitErgaenzungen}
-      onChange={setMitErgaenzungen}
-      onSchliessen={schliessen && (() => uebergang("panel", schliessen))}
-    />
+  const spalteUmschalten = () =>
+    uebergang("panel", () => setPanel((alt) => (alt === "seite" ? null : "seite")));
+  const blattUmschalten = (art: BlattArt) => {
+    setBlattArt(art);
+    setBlatt((alt) => (alt === art ? null : art));
+  };
+  // „Auf dieser Seite“: breit die Spalte rechts, kompakt ein Blatt.
+  const seiteOffen = stufe === "breit" ? panel === "seite" : blatt === "seite";
+  const inhalt = (gross: boolean, feldRef?: typeof suchfeld) => (
+    <Suche onGehe={hingehen} feldRef={feldRef}>
+      <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} gross={gross} />
+    </Suche>
   );
 
   return (
@@ -167,68 +194,91 @@ export function App() {
       <div className="flex h-dvh flex-col text-sm">
         <header
           className={cn(
-            "flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b pt-[env(safe-area-inset-top)] short:h-[calc(3rem+env(safe-area-inset-top))] wide:gap-4",
+            "flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b pt-[env(safe-area-inset-top)] short:h-[calc(3rem+env(safe-area-inset-top))] md:gap-4",
             RAND_X,
           )}
         >
-          <h1 className="min-w-0 flex-1 text-base leading-5 font-semibold compact:flex-none">
+          <h1 className="min-w-0 flex-1 text-base leading-5 font-semibold compact:flex-initial">
             {SKRIPT.titel}
           </h1>
-          <span className="hidden compact:inline-flex">
-            <KapitelBadge seite={seite} />
-          </span>
-          <span className="hidden flex-1 compact:block" />
-          <span className="hidden wide:block">
-            <AnsichtTabs mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
-          </span>
-          <div className="hidden gap-2 wide:flex">
-            {/* Die Wiederholungsfragen haben keine Abschnitte */}
-            {!seite.fragen && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Auf dieser Seite"
-                aria-pressed={panel === "seite"}
-                className={cn(panel === "seite" && "bg-accent")}
-                onClick={() => umschalten("seite")}
-              >
-                <List />
-              </Button>
-            )}
+          {stufe === "schmal" ? (
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Einstellungen"
-              aria-pressed={panel === "einstellungen"}
-              className={cn(panel === "einstellungen" && "bg-accent")}
-              onClick={() => umschalten("einstellungen")}
+              aria-label="Suchen"
+              className="size-10"
+              onClick={() => {
+                setTab("inhalt");
+                requestAnimationFrame(() => suchfeld.current?.focus());
+              }}
             >
-              <Settings />
+              <Search />
             </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Suchen"
-            className="size-10 wide:hidden"
-            onClick={() => {
-              setTab("inhalt");
-              requestAnimationFrame(() => suchfeld.current?.focus());
-            }}
-          >
-            <Search />
-          </Button>
+          ) : (
+            <>
+              {/* Unter `md:` steht „Kapitel 2 / 3“ über der Seite, sonst passen
+                  Titel, Tabs und Knöpfe nicht in die Zeile */}
+              <span className="hidden md:inline-flex">
+                <KapitelBadge seite={seite} />
+              </span>
+              <span className="flex-1" />
+              <span className="shrink-0">
+                <AnsichtTabs mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
+              </span>
+              <div className="flex shrink-0 gap-2">
+                {stufe === "kompakt" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Inhalt"
+                    aria-pressed={blatt === "inhalt"}
+                    className={cn(blatt === "inhalt" && "bg-accent")}
+                    onClick={() => blattUmschalten("inhalt")}
+                  >
+                    <BookOpen />
+                  </Button>
+                )}
+                {/* Die Wiederholungsfragen haben keine Abschnitte */}
+                {!seite.fragen && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Auf dieser Seite"
+                    aria-pressed={seiteOffen}
+                    className={cn(seiteOffen && "bg-accent")}
+                    onClick={() =>
+                      stufe === "breit" ? spalteUmschalten() : blattUmschalten("seite")
+                    }
+                  >
+                    <List />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Einstellungen"
+                  aria-haspopup="dialog"
+                  onClick={() => setEinstellungen(true)}
+                >
+                  <Settings />
+                </Button>
+              </div>
+            </>
+          )}
         </header>
 
         <div className="flex min-h-0 flex-1">
-          <aside className="relative hidden w-70 shrink-0 flex-col overflow-y-auto border-r wide:flex">
-            <Suche onGehe={hingehen} spalte>
-              <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} />
-            </Suche>
-          </aside>
+          {stufe === "breit" && (
+            <aside className="relative flex w-70 shrink-0 flex-col overflow-y-auto border-r">
+              <Suche onGehe={hingehen} spalte>
+                <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} />
+              </Suche>
+            </aside>
+          )}
 
           <main ref={mitte} className="relative min-w-0 flex-1 overflow-y-auto">
-            <div className={tab === "skript" ? undefined : "hidden wide:block"}>
+            {/* Bleibt eingehängt, damit Antworten und Regler einen Tabwechsel überstehen */}
+            <div className={tab === "skript" ? undefined : "hidden"}>
               <KapitelSeite
                 seite={seite}
                 onGehe={hingehen}
@@ -236,34 +286,44 @@ export function App() {
               />
             </div>
             {tab === "inhalt" && (
-              <section className={cn("py-4 compact:py-6 wide:hidden", RAND_X)} aria-label="Inhalt">
-                <Suche onGehe={hingehen} feldRef={suchfeld}>
-                  <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} gross />
-                </Suche>
+              <section className={cn("py-4", RAND_X)} aria-label="Inhalt">
+                {inhalt(true, suchfeld)}
               </section>
             )}
-            {tab === "einstellungen" && <div className="wide:hidden">{einstellungen()}</div>}
+            {tab === "einstellungen" && (
+              <EinstellungenSeite mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
+            )}
           </main>
 
-          {panel === "seite" && !seite.fragen && (
-            <aside
-              data-vt="panel"
-              className="relative hidden w-70 shrink-0 overflow-y-auto px-6 py-10 wide:block"
-            >
+          {stufe === "breit" && panel === "seite" && !seite.fragen && (
+            <aside data-vt="panel" className="relative w-70 shrink-0 overflow-y-auto px-6 py-10">
               <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} />
             </aside>
           )}
-          {panel === "einstellungen" && (
-            <aside
-              aria-label="Einstellungen"
-              data-vt="panel"
-              className="relative hidden w-85 shrink-0 overflow-y-auto border-l wide:block"
-            >
-              {einstellungen(() => setPanel(null))}
-            </aside>
-          )}
         </div>
-        <TabLeiste tab={tab} onChange={setTab} />
+        {stufe === "schmal" && <TabLeiste tab={tab} onChange={setTab} />}
+
+        {stufe === "kompakt" && (
+          <Blatt
+            offen={blatt !== null}
+            titel={blattArt === "inhalt" ? "Inhalt" : "Auf dieser Seite"}
+            onSchliessen={() => setBlatt(null)}
+          >
+            {blattArt === "inhalt" ? (
+              inhalt(true)
+            ) : (
+              <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} imBlatt />
+            )}
+          </Blatt>
+        )}
+        {stufe !== "schmal" && (
+          <EinstellungenDialog
+            offen={einstellungen}
+            onSchliessen={() => setEinstellungen(false)}
+            mitErgaenzungen={mitErgaenzungen}
+            onChange={setMitErgaenzungen}
+          />
+        )}
       </div>
     </AnsichtContext.Provider>
   );
