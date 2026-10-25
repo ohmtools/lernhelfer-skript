@@ -55,13 +55,12 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   shadcns Komponenten in `src/components/ui/` außer `badge`, `radio-group`,
   `slider` und `table` (`NOTES.md` dort), `src/components/ohmtools/`
   (`SettingsDialog`, `SettingsPage`, `PanelSheet`, `PanelHeader`,
-  `ResponsivePopover` mit `PhoneDrawer`) und `src/lib/ohmtools/`
-  (`steps.ts`, `motion.ts`). `src/index.css` importiert das Stylesheet und
+  `BottomBar`, `ResponsivePopover` mit `PhoneDrawer`) und `src/lib/ohmtools/`
+  (`steps.ts`, `motion.ts`, `bottom-bar-height.ts`). `src/index.css` importiert das Stylesheet und
   enthält nur eigenes CSS (Shiki- und Mafs-Variablen auf Tokens,
   Formelnummern, `erscheinen`). Die Elementgruppen `AppShell`, `Panel`,
   `Area` und `Views` benutzt die Seite nicht, weil ihre Schale nach
-  „Reading pages“ anders ist (Kapitel links, 280 px rechts, Einstellungen als
-  Tab ohne Pfeil zurück), `Popup` nicht, weil es Menü, Auswahl und Rückfrage
+  „Reading pages“ anders ist (Kapitel links, 280 px rechts), `Popup` nicht, weil es Menü, Auswahl und Rückfrage
   mitbringt (etwa 80 kB mehr in der einen Datei); sie baut sich aus den
   Teilen darunter. `theme-provider.tsx` bleibt eigen, weil er beim Drucken
   hell schaltet.
@@ -78,9 +77,14 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 - Kopf (56 px, auf niedrigen Querformat-Bildschirmen `short:` 48 px, dazu der
   sichere Bereich oben): Titel, „Kapitel 2 / 3“ (erst ab `md:`, darunter
   über der Seite, sonst passt die Zeile nicht), Tabs „Mit Ergänzungen | Nur
-  Original“ und die Knöpfe „Inhalt“ (nur kompakt), „Auf dieser Seite“ (nicht
-  bei den Wiederholungsfragen, die keine Abschnitte haben) und
-  „Einstellungen“. Drei Stufen wie in den Apps (Entscheidung des Nutzers,
+  Original“ (am Handy in der Leiste unten) und die Knöpfe „Inhalt“ (nicht
+  breit), „Auf dieser Seite“ (nicht am Handy und nicht bei den
+  Wiederholungsfragen, die keine Abschnitte haben) und „Einstellungen“.
+  Die Teile folgen den Gruppen von DESIGN.md („Which group“), damit nichts
+  doppelt vorkommt (Entscheidung des Nutzers, 2026-10-25, wie in Faltung):
+  die Ansicht ist eine „View“ (Tabs im Kopf, am Handy in der Leiste unten,
+  nie in den Einstellungen), „Inhalt“ und „Auf dieser Seite“ sind Panels,
+  die Einstellungen eine „Area“. Drei Stufen wie in den Apps (Entscheidung des Nutzers,
   2026-10-25; `useStep()` aus `src/lib/ohmtools/steps.ts` mit denselben
   Abfragen wie `compact:` und `wide:`, breit ab 64rem und 700 px Höhe):
   - breit (`wide:`): drei Spalten in einem Viewport, jede scrollt für sich
@@ -91,15 +95,18 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
     Kapitel wie am Handy) und „Auf dieser Seite“ sind ein Blatt von rechts,
     380 px (`PanelSheet` mit `PanelHeader`); eine Wahl darin schließt es
     und geht dorthin.
-  - schmal: eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“
-    (Tabs); die Seite bleibt beim Tabwechsel eingehängt.
+  - schmal: eine Spalte, im Kopf Titel, „Inhalt“ und „Einstellungen“,
+    unten die Leiste (`BottomBar`) mit den Tabs „Mit Ergänzungen | Nur
+    Original“ über die ganze Breite. „Inhalt“ (Suche und Kapitel, 44-px-
+    Zeilen) ist eine Seite über allem mit Pfeil zurück (wie `Panel`), der
+    Rest `inert`; eine Wahl darin schließt sie und geht dorthin.
 - Einstellungen wie in den Apps (`Einstellungen.tsx`): breit der Dialog
   bis 1000 × 720 mit den Abschnitten links (`SettingsDialog`), kompakt eine
   Seite über Kopf und Spalten (`SettingsPage`, der Rest `inert`, sie kommt
-  von rechts und geht dorthin zurück), am Handy im Tab dieselbe Liste ohne
-  Pfeil zurück, denn sie ist die Wurzel des Tabs; jeder Abschnitt eine Seite
-  mit Pfeil zurück. Abschnitte „Ansicht“ (Mit Ergänzungen / Nur Original,
-  Hinweis zu hell und dunkel) und „Über dieses Skript“.
+  von rechts und geht dorthin zurück), am Handy dieselbe Seite; jeder
+  Abschnitt eine Seite mit Pfeil zurück. Nur der Abschnitt „Über dieses
+  Skript“ (mit dem Hinweis zu hell und dunkel); die Ansicht steht nicht
+  hier, sie hat ihre Tabs.
 - Eine Seite pro Kapitel mit „Zurück/Weiter“ (Wunsch des Nutzers), danach
   eine eigene Seite „Wiederholungsfragen“ (`#/{kapitel}/wiederholungsfragen`):
   `KapitelSeite` rendert dort das ganze Kapitel und zeigt nur den Block
@@ -108,13 +115,14 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Abschnitt).
 - Bewegung wie in den Apps, ohne Bibliothek (`transition()` und Kurve aus
   `src/lib/ohmtools/motion.ts`, `hereinschieben` in `src/lib/bewegung.ts`,
-  `erscheinen` in `src/index.css`): die nächste Seite oder der Tab rechts
-  davon kommt von rechts, die vorige von links (Web Animations API, `main`
+  `erscheinen` in `src/index.css`): die nächste Seite kommt von rechts, die
+  vorige von links (Web Animations API, `main`
   schneidet dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet
   die Seite neu ein; „Auf dieser Seite“ gleitet breit per View Transition
   herein und hinaus, Blatt und Dialog bewegen sich wie in den Apps
-  (`ui/sheet.tsx`, `ui/dialog.tsx`), die Seite der Einstellungen (kompakt)
-  und ihre Abschnitte kommen von rechts und gehen nach rechts zurück; ein
+  (`ui/sheet.tsx`, `ui/dialog.tsx`), die Seiten über allem (Einstellungen
+  kompakt und am Handy, „Inhalt“ am Handy) und die Abschnitte der
+  Einstellungen kommen von rechts und gehen nach rechts zurück; ein
   Sprung innerhalb der Seite scrollt sanft; Aufgedecktes (Antworten, Urteile, Rückmeldungen) und die Abschnitte
   im Kapitelbaum erscheinen mit `erscheinen`. Bei `prefers-reduced-motion`
   bewegt sich nichts.
