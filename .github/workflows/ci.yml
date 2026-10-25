@@ -28,7 +28,7 @@ jobs:
           echo "dist/index.html: $groesse Bytes"
           test "$groesse" -lt 2500000
       - name: ohmtools-Design
-        run: npx --yes github:ohmtools/design check src/index.css components.json src/components/ui/*.tsx src/components/shell/*.tsx src/primitiven/*.tsx
+        run: npx --yes github:ohmtools/design check src/index.css src/styles/ohmtools.css components.json src/components/ui/*.tsx src/components/ohmtools/*.tsx src/components/shell/*.tsx src/lib/ohmtools/*.ts src/primitiven/*.tsx
 
   # Wie der Lernhelfer in Claude.ai: frische Installation ohne devDependencies.
   wie-im-lernhelfer:

@@ -1,21 +1,27 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BookOpen, List, Search, Settings } from "lucide-react";
 import { cn } from "cn";
+import { PanelHeader } from "@/components/ohmtools/panel-header";
+import { PanelSheet } from "@/components/ohmtools/panel-sheet";
 import { Button } from "@/components/ui/button";
 import { AnsichtTabs } from "@/components/shell/AnsichtTabs";
 import { AufDieserSeite } from "@/components/shell/AufDieserSeite";
-import { Blatt } from "@/components/shell/Blatt";
-import { EinstellungenDialog, EinstellungenSeite } from "@/components/shell/Einstellungen";
+import {
+  EinstellungenDialog,
+  EinstellungenSeite,
+  EinstellungenTab,
+} from "@/components/shell/Einstellungen";
 import { Kapitelbaum } from "@/components/shell/Kapitelbaum";
 import { KapitelBadge, KapitelSeite } from "@/components/shell/KapitelSeite";
 import { Suche } from "@/components/shell/Suche";
 import { TabLeiste, type Tab } from "@/components/shell/TabLeiste";
 import { AnsichtContext } from "@/lib/ansicht";
-import { hereinschieben, uebergang, wenigBewegung } from "@/lib/bewegung";
+import { hereinschieben } from "@/lib/bewegung";
 import { FRAGENSEITE, SEITEN, SKRIPT } from "@/lib/kapitel";
 import { useNavigation, type Ort } from "@/lib/navigation";
 import { RAND_X } from "@/lib/rand";
-import { useStufe } from "@/lib/stufe";
+import { reducedMotion, transition } from "@/lib/ohmtools/motion";
+import { useStep } from "@/lib/ohmtools/steps";
 
 // Ein Viewport, die Seite scrollt nie; jede Spalte scrollt für sich
 // (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px, auf niedrigen
@@ -24,18 +30,22 @@ import { useStufe } from "@/lib/stufe";
 // setzt `text-sm`, die Seite selbst `text-base`. Jede Spalte ist `relative`:
 // sonst beziehen sich absolut gesetzte Elemente darin (`sr-only`) auf das
 // Dokument, verlängern es, und `scrollIntoView` schiebt den Kopf weg.
-// Drei Stufen (`@/lib/stufe`, dieselben Abfragen wie `compact:`/`wide:`):
-// - breit (`wide:`): links Suche und Kapitel (280 px), Mitte die Seite
+// Drei Stufen (`useStep()` aus `@/lib/ohmtools/steps`, dieselben Abfragen
+// wie `compact:` und `wide:` im Stylesheet des Designs):
+// - breit (`wide`): links Suche und Kapitel (280 px), Mitte die Seite
 //   (höchstens 720 px), rechts „Auf dieser Seite“ (280 px, schließbar).
-// - kompakt (`compact:`): eine Spalte, alles in der Kopfzeile; „Inhalt“ und
-//   „Auf dieser Seite“ als Blatt von rechts (380 px).
-// - schmal: eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“.
-// Die Einstellungen sind ab kompakt ein Dialog, am Handy der Tab.
-// Bewegung (`@/lib/bewegung`): die nächste Seite oder der Tab rechts davon
-// kommt von rechts, die vorige von links; „Mit Ergänzungen | Nur Original“
-// blendet die Seite neu ein; die Spalte rechts gleitet herein; ein Sprung
-// innerhalb der Seite scrollt sanft. Blatt und Dialog bewegen sich wie in den
-// Apps (`ui/sheet.tsx`, `ui/dialog.tsx`).
+// - kompakt (`compact`): eine Spalte, alles in der Kopfzeile; „Inhalt“ und
+//   „Auf dieser Seite“ als Blatt von rechts (380 px, `PanelSheet`).
+// - schmal (`narrow`): eine Spalte und die Leiste „Skript | Inhalt |
+//   Einstellungen“.
+// Die Einstellungen sind breit ein Dialog, kompakt eine Seite an Stelle der
+// Ansicht, am Handy der Tab.
+// Bewegung (`@/lib/bewegung`, `@/lib/ohmtools/motion`): die nächste Seite
+// oder der Tab rechts davon kommt von rechts, die vorige von links; „Mit
+// Ergänzungen | Nur Original“ blendet die Seite neu ein; die Spalte rechts
+// gleitet herein (`panel`), die Seite der Einstellungen kommt von rechts
+// (`forward`, `back`); ein Sprung innerhalb der Seite scrollt sanft. Blatt
+// und Dialog bewegen sich wie in den Apps (`ui/sheet.tsx`, `ui/dialog.tsx`).
 
 type Panel = "seite" | null;
 type BlattArt = "inhalt" | "seite";
@@ -103,10 +113,10 @@ function startPanel(): Panel {
 
 export function App() {
   const { ort, gehe } = useNavigation();
-  const stufe = useStufe();
+  const stufe = useStep();
   const [tabWahl, setTab] = useState<Tab>("skript");
   // Die Leiste gibt es nur am Handy; sonst steht immer die Seite da.
-  const tab: Tab = stufe === "schmal" ? tabWahl : "skript";
+  const tab: Tab = stufe === "narrow" ? tabWahl : "skript";
   const [panel, setPanel] = useState<Panel>(startPanel);
   const [blatt, setBlatt] = useState<BlattArt | null>(null);
   // Was das Blatt zeigt; bleibt beim Schließen, bis es hinausgeglitten ist.
@@ -131,8 +141,8 @@ export function App() {
   const [stufeZuletzt, setStufeZuletzt] = useState(stufe);
   if (stufeZuletzt !== stufe) {
     setStufeZuletzt(stufe);
-    if (stufe !== "kompakt") setBlatt(null);
-    if (stufe === "schmal") setEinstellungen(false);
+    if (stufe !== "compact") setBlatt(null);
+    if (stufe === "narrow") setEinstellungen(false);
   }
 
   const hingehen = (neu: Ort) => {
@@ -153,7 +163,7 @@ export function App() {
       ziel.abschnitt && ziel.abschnitt !== FRAGENSEITE
         ? document.getElementById(ziel.abschnitt)
         : null;
-    const behavior = sanft.current && !wenigBewegung() ? "smooth" : "auto";
+    const behavior = sanft.current && !reducedMotion() ? "smooth" : "auto";
     if (el) el.scrollIntoView({ block: "start", behavior });
     else mitte.current?.scrollTo({ top: 0, behavior });
     if (el && behavior === "auto" && mitte.current) return festhalten(el, mitte.current);
@@ -176,13 +186,21 @@ export function App() {
     return <p className="p-6 text-sm">Dieses Skript hat noch keine Kapitel.</p>;
 
   const spalteUmschalten = () =>
-    uebergang("panel", () => setPanel((alt) => (alt === "seite" ? null : "seite")));
+    transition("panel", () => setPanel((alt) => (alt === "seite" ? null : "seite")));
   const blattUmschalten = (art: BlattArt) => {
     setBlattArt(art);
     setBlatt((alt) => (alt === art ? null : art));
   };
+  // Die Einstellungen: breit ein Dialog, kompakt eine Seite, die von rechts
+  // kommt und dorthin zurückgeht (wie `useArea()` des Designs).
+  const einstellungenUmschalten = (offen: boolean) =>
+    stufe === "compact"
+      ? transition(offen ? "forward" : "back", () => setEinstellungen(offen))
+      : setEinstellungen(offen);
+  // Kompakt liegt die Seite der Einstellungen über allem, der Rest ruht.
+  const ruhend = stufe === "compact" && einstellungen;
   // „Auf dieser Seite“: breit die Spalte rechts, kompakt ein Blatt.
-  const seiteOffen = stufe === "breit" ? panel === "seite" : blatt === "seite";
+  const seiteOffen = stufe === "wide" ? panel === "seite" : blatt === "seite";
   const inhalt = (gross: boolean, feldRef?: typeof suchfeld) => (
     <Suche onGehe={hingehen} feldRef={feldRef}>
       <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} gross={gross} />
@@ -191,8 +209,9 @@ export function App() {
 
   return (
     <AnsichtContext.Provider value={{ mitErgaenzungen }}>
-      <div className="flex h-dvh flex-col text-sm">
+      <div className="relative flex h-dvh flex-col text-sm">
         <header
+          inert={ruhend}
           className={cn(
             "flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b pt-[env(safe-area-inset-top)] short:h-[calc(3rem+env(safe-area-inset-top))] md:gap-4",
             RAND_X,
@@ -201,7 +220,7 @@ export function App() {
           <h1 className="min-w-0 flex-1 text-base leading-5 font-semibold compact:flex-initial">
             {SKRIPT.titel}
           </h1>
-          {stufe === "schmal" ? (
+          {stufe === "narrow" ? (
             <Button
               variant="ghost"
               size="icon"
@@ -226,7 +245,7 @@ export function App() {
                 <AnsichtTabs mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
               </span>
               <div className="flex shrink-0 gap-2">
-                {stufe === "kompakt" && (
+                {stufe === "compact" && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -247,7 +266,7 @@ export function App() {
                     aria-pressed={seiteOffen}
                     className={cn(seiteOffen && "bg-accent")}
                     onClick={() =>
-                      stufe === "breit" ? spalteUmschalten() : blattUmschalten("seite")
+                      stufe === "wide" ? spalteUmschalten() : blattUmschalten("seite")
                     }
                   >
                     <List />
@@ -257,8 +276,8 @@ export function App() {
                   variant="ghost"
                   size="icon"
                   aria-label="Einstellungen"
-                  aria-haspopup="dialog"
-                  onClick={() => setEinstellungen(true)}
+                  aria-haspopup={stufe === "wide" ? "dialog" : undefined}
+                  onClick={() => einstellungenUmschalten(true)}
                 >
                   <Settings />
                 </Button>
@@ -267,8 +286,8 @@ export function App() {
           )}
         </header>
 
-        <div className="flex min-h-0 flex-1">
-          {stufe === "breit" && (
+        <div inert={ruhend} className="flex min-h-0 flex-1">
+          {stufe === "wide" && (
             <aside className="relative flex w-70 shrink-0 flex-col overflow-y-auto border-r">
               <Suche onGehe={hingehen} spalte>
                 <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} />
@@ -291,35 +310,45 @@ export function App() {
               </section>
             )}
             {tab === "einstellungen" && (
-              <EinstellungenSeite mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
+              <EinstellungenTab mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
             )}
           </main>
 
-          {stufe === "breit" && panel === "seite" && !seite.fragen && (
+          {stufe === "wide" && panel === "seite" && !seite.fragen && (
             <aside data-vt="panel" className="relative w-70 shrink-0 overflow-y-auto px-6 py-10">
               <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} />
             </aside>
           )}
         </div>
-        {stufe === "schmal" && <TabLeiste tab={tab} onChange={setTab} />}
+        {stufe === "narrow" && <TabLeiste tab={tab} onChange={setTab} />}
 
-        {stufe === "kompakt" && (
-          <Blatt
-            offen={blatt !== null}
-            titel={blattArt === "inhalt" ? "Inhalt" : "Auf dieser Seite"}
-            onSchliessen={() => setBlatt(null)}
-          >
-            {blattArt === "inhalt" ? (
-              inhalt(true)
-            ) : (
-              <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} imBlatt />
-            )}
-          </Blatt>
+        {stufe === "compact" && (
+          <PanelSheet open={blatt !== null} onClose={() => setBlatt(null)}>
+            <PanelHeader
+              title={blattArt === "inhalt" ? "Inhalt" : "Auf dieser Seite"}
+              onClose={() => setBlatt(null)}
+              closeLabel={`${blattArt === "inhalt" ? "Inhalt" : "Auf dieser Seite"} schließen`}
+            />
+            <div className="relative min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              {blattArt === "inhalt" ? (
+                inhalt(true)
+              ) : (
+                <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} imBlatt />
+              )}
+            </div>
+          </PanelSheet>
         )}
-        {stufe !== "schmal" && (
+        {stufe === "wide" && (
           <EinstellungenDialog
             offen={einstellungen}
             onSchliessen={() => setEinstellungen(false)}
+            mitErgaenzungen={mitErgaenzungen}
+            onChange={setMitErgaenzungen}
+          />
+        )}
+        {stufe === "compact" && einstellungen && (
+          <EinstellungenSeite
+            onSchliessen={() => einstellungenUmschalten(false)}
             mitErgaenzungen={mitErgaenzungen}
             onChange={setMitErgaenzungen}
           />
