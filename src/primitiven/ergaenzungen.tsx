@@ -19,8 +19,9 @@ import * as prosa from "@/primitiven/prosa";
 
 // Alles, was Claude ergänzt, ist ein Block im Text (nie am Rand): oben das
 // rote Badge „Ergänzung“, der Titel und rechts optional die Art, darunter
-// eine rote Linie (DESIGN.md, „Reading pages“). Keine Kästen. „Nur
-// Original“ blendet alle Ergänzungen aus.
+// eine rote Linie; am Ende eine rote Linie mit „Ende der Ergänzung“, damit
+// klar ist, wo das Original weitergeht (DESIGN.md, „Reading pages“). Keine
+// Kästen. „Nur Original“ blendet alle Ergänzungen aus.
 
 /** Das rote Badge, das jede Ergänzung trägt. */
 export const ErgaenzungBadge = ({ className }: { className?: string }) => (
@@ -44,6 +45,14 @@ export function ErgaenzungKopf({ titel, art }: { titel: ReactNode; art?: string 
   );
 }
 
+/** Schluss einer Ergänzung: rote Linie, rechts „Ende der Ergänzung“. */
+export const ErgaenzungEnde = () => (
+  <div className="mt-4 flex items-center gap-3 text-xs leading-5 text-muted-foreground">
+    <span aria-hidden className="h-0.5 flex-1 bg-red" />
+    <span>Ende der Ergänzung</span>
+  </div>
+);
+
 export function Ergaenzung({
   id,
   titel,
@@ -65,6 +74,7 @@ export function Ergaenzung({
       <div className={cn("mt-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", className)}>
         {children}
       </div>
+      <ErgaenzungEnde />
     </section>
   );
 }
@@ -261,7 +271,11 @@ export function AufdeckKnopf({
   );
 }
 
-/** Erst selbst denken, dann aufdecken: Frage und Knopf in einer Zeile, darunter die Antwort. */
+/**
+ * Erst selbst denken, dann aufdecken: Frage und Knopf in einer Zeile, darunter
+ * die Antwort. Nur noch für ältere Seiten: Fragen stehen heute nur am
+ * Kapitelende (ANLEITUNG.md, Kapitel 7).
+ */
 export function Denkanstoss({ id, children }: { id?: string; children: ReactNode }) {
   const [frage, ...antwort] = Children.toArray(children);
   return (

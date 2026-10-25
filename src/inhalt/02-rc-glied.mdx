@@ -23,8 +23,8 @@ $$
 
 Nach einer Zeitkonstante ist der Kondensator zu etwa 63 % geladen, nach fünf Zeitkonstanten gilt er als vollständig geladen.
 
-:::denkanstoss[Woher kommen die 63 %?]
-Setz $t = \tau$ in Gleichung 2.1 ein: $u_C(\tau) = U_0(1 - e^{-1}) \approx 0{,}632\,U_0$.
+:::anmerkung[Woher die 63 % kommen]
+Mit $t = \tau$ in Gleichung 2.1 ist $u_C(\tau) = U_0(1 - e^{-1}) \approx 0{,}632\,U_0$. (folgt aus skript.pdf, S. 3)
 :::
 
 :::interaktiv[Aufladen des Kondensators]
@@ -44,7 +44,7 @@ Setz $t = \tau$ in Gleichung 2.1 ein: $u_C(\tau) = U_0(1 - e^{-1}) \approx 0{,}6
   <Kurve f={() => 1 - Math.exp(-1)} name="63 %" />
   <Punkt x={({ R, C }) => R * C} y={() => 1 - Math.exp(-1)} text="$\tau$" />
 </Funktionsgraph>
-Probier: Verdopple $R$ oder $C$. Wohin wandert der Punkt bei $\tau$, und warum verschiebt sich die ganze Kurve?
+Probier: Verdopple $R$ oder $C$. Der Punkt bei $\tau$ wandert zur doppelten Zeit, und die ganze Kurve streckt sich mit, denn $t$ steht in Gleichung 2.1 nur in $t/\tau$.
 :::
 
 ::seite[4]
@@ -85,15 +85,11 @@ Der Stromzeiger steht senkrecht auf dem Spannungszeiger und zeigt in Drehrichtun
   <Hilfslinie von={[0, 2.5]} nach={[0.001, 2.5]} text="$\hat{u}$" anker="oben links" />
   <Punkt x={({ t }) => t} y={({ t, u }) => u(t)} />
 </Funktionsgraph>
-Probier: Spiel die Animation ab und halte sie an. Wo steht der Zeiger, wenn die Kurve ihr Maximum erreicht, und wo, wenn sie durch null geht? Werte aus Abbildung 2.2: 2,5 V, 1 kHz.
+Probier: Spiel die Animation ab und halte sie an. Die Spannung ist immer die Höhe der Zeigerspitze, die Hilfslinie zeigt sie auf der Kurve. Werte aus Abbildung 2.2: 2,5 V, 1 kHz.
 :::
 
 :::rechnen[Welche Frequenz hat die Spannung in Abbildung 2.2, in Hz?]{ergebnis=1000 toleranz=1 einheit="Hz"}
 Periodendauer $T = 5 \cdot 0{,}2\,\mathrm{ms} = 1\,\mathrm{ms}$, also $f = 1/T = 1000\,\mathrm{Hz}$.
-:::
-
-:::frage[Warum eilt am Kondensator der Strom der Spannung voraus?]
-Der Strom lädt den Kondensator, $i = C\,\mathrm{d}u/\mathrm{d}t$. Er ist am größten, wo sich die Spannung am schnellsten ändert, also im Nulldurchgang der Spannung, eine Viertelperiode vor ihrem Maximum.
 :::
 
 :::auswahl[Wo steht der umlaufende Zeiger, wenn die Spannung ihr Maximum erreicht?]
