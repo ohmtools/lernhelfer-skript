@@ -1,5 +1,6 @@
 import { Children, isValidElement, useId, useState, type ReactNode } from "react";
 import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -7,37 +8,52 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { groesse, leseZahl } from "@/lib/format";
 import {
+  Antwort,
   AufdeckBereich,
   AufdeckKnopf,
   FrageRahmen,
   useAufgedeckt,
 } from "@/primitiven/ergaenzungen";
 
+// Die drei Arten der Wiederholungsfragen (DESIGN.md, „Questions page“):
+// Erklären (eigene Antwort, dann aufdecken), Auswahl (Rückmeldung an den
+// Optionen) und Rechnen (Zahl prüfen).
+
 /** Freie Frage: eigene Antwort (optional), dann die Lösung aufdecken. */
 export function Frage({ children }: { children: ReactNode }) {
+  const [frage, ...antwort] = Children.toArray(children);
+  const id = useId();
   return (
-    <FrageRahmen>
+    <FrageRahmen art="Erklären">
       <AufdeckBereich>
-        {Children.toArray(children)[0]}
-        <Textarea
-          aria-label="Deine Antwort (bleibt nur auf dieser Seite)"
-          placeholder="Deine Antwort (bleibt nur auf dieser Seite)"
-          className="mt-2 min-h-16"
-        />
-        <AufdeckKnopf zeigen="Lösung zeigen" verbergen="Lösung verbergen" />
-        {Children.toArray(children).slice(1)}
+        {frage}
+        <label htmlFor={id} className="sr-only">
+          Deine Antwort (bleibt nur auf dieser Seite)
+        </label>
+        <Textarea id={id} placeholder="Deine Antwort" className="mt-3 min-h-18" />
+        <AufdeckKnopf className="mt-2.5" />
+        {antwort}
       </AufdeckBereich>
     </FrageRahmen>
   );
 }
 
-// Auswahlfrage: eine richtige Option → Optionsfelder, mehrere → Kästchen.
-// Nach „Prüfen“ steht unter jeder markierten Option ihre eigene Erklärung.
+// Auswahlfrage: eine richtige Option → Optionsfelder, die Rückmeldung kommt
+// mit der Wahl; mehrere → Kästchen und „Prüfen“. Unter jeder markierten
+// Option steht ihre eigene Erklärung, nach der Liste die für alle.
 
 export function Auswahlfrage({ children }: { children: ReactNode }) {
   return (
-    <FrageRahmen>
-      <AufdeckBereich>{children}</AufdeckBereich>
+    <FrageRahmen art="Auswahl">
+      <AufdeckBereich>
+        {Children.map(children, (k) =>
+          isValidElement<{ children?: ReactNode }>(k) && k.type === Antwort ? (
+            <Auswahlerklaerung>{k.props.children}</Auswahlerklaerung>
+          ) : (
+            k
+          ),
+        )}
+      </AufdeckBereich>
     </FrageRahmen>
   );
 }
@@ -48,6 +64,18 @@ export function Optionserklaerung({ children }: { children: ReactNode }) {
 }
 
 const istErklaerung = (k: ReactNode) => isValidElement(k) && k.type === Optionserklaerung;
+
+function Urteil({ richtig }: { richtig: boolean }) {
+  return richtig ? (
+    <Badge variant="outline">
+      <Check aria-hidden /> richtig
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="border-destructive/30 text-destructive">
+      <X aria-hidden /> falsch
+    </Badge>
+  );
+}
 
 export function Optionen({ children }: { children: ReactNode }) {
   const optionen = Children.toArray(children).filter(isValidElement) as React.ReactElement<{
@@ -70,7 +98,7 @@ export function Optionen({ children }: { children: ReactNode }) {
     gewaehlt.size === richtige.size && [...gewaehlt].every((i) => richtige.has(i));
 
   const umschalten = (i: number, an: boolean) => {
-    setAufgedeckt(false);
+    setAufgedeckt(!mehrfach);
     setGewaehlt((alt) => {
       const neu = mehrfach ? new Set(alt) : new Set<number>();
       if (an) neu.add(i);
@@ -81,21 +109,10 @@ export function Optionen({ children }: { children: ReactNode }) {
 
   const zeilen = teile.map(({ text, erklaerung }, i) => {
     const feld = `${id}-${i}`;
-    const markiert = geprueft && (richtige.has(i) || gewaehlt.has(i));
-    const zeichen = markiert ? (
-      richtige.has(i) ? (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Check aria-hidden className="size-3.5 text-foreground" /> richtig
-        </span>
-      ) : (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <X aria-hidden className="size-3.5 text-destructive" /> falsch
-        </span>
-      )
-    ) : null;
+    const urteil = geprueft && (richtige.has(i) || gewaehlt.has(i));
     return (
-      <div key={i}>
-        <div className="flex items-start gap-3">
+      <div key={i} className="border-b py-2.5">
+        <div className="flex items-center gap-2.5">
           {mehrfach ? (
             <Checkbox
               id={feld}
@@ -105,13 +122,13 @@ export function Optionen({ children }: { children: ReactNode }) {
           ) : (
             <RadioGroupItem id={feld} value={String(i)} />
           )}
-          <label htmlFor={feld} className="flex-1 text-sm leading-snug">
+          <label htmlFor={feld} className="flex-1 text-sm leading-5">
             {text}
           </label>
-          {zeichen}
+          {urteil && <Urteil richtig={richtige.has(i)} />}
         </div>
-        {markiert && erklaerung.length > 0 && (
-          <div className="mt-1 ml-7.5 text-sm leading-relaxed text-muted-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+        {urteil && erklaerung.length > 0 && (
+          <div className="mt-1.5 ml-6.5 text-sm leading-5 text-muted-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
             {erklaerung}
           </div>
         )}
@@ -120,42 +137,52 @@ export function Optionen({ children }: { children: ReactNode }) {
   });
 
   return (
-    <>
-      <p className="mt-1 mb-2 text-xs text-muted-foreground">
-        {mehrfach ? "Mehrere Antworten sind richtig." : "Eine Antwort ist richtig."}
-      </p>
+    <div className="mt-3">
       {mehrfach ? (
-        <div className="grid gap-3">{zeilen}</div>
+        <div role="group" aria-label="Antworten (mehrere sind richtig)" className="flex flex-col">
+          {zeilen}
+        </div>
       ) : (
         <RadioGroup
+          aria-label="Antworten"
+          className="flex flex-col gap-0"
           value={gewaehlt.size ? String([...gewaehlt][0]) : null}
           onValueChange={(wert) => umschalten(Number(wert), true)}
         >
           {zeilen}
         </RadioGroup>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!gewaehlt.size}
-          onClick={() => setAufgedeckt(true)}
-        >
-          Prüfen
-        </Button>
-        {geprueft && (
-          <span role="status" className="text-sm">
-            {alleRichtig ? "Richtig." : "Noch nicht ganz: Die richtigen Antworten sind markiert."}
-          </span>
-        )}
-      </div>
-    </>
+      {mehrfach && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-muted-foreground">Mehrere Antworten sind richtig.</span>
+          <Button disabled={!gewaehlt.size} onClick={() => setAufgedeckt(true)}>
+            Prüfen
+          </Button>
+        </div>
+      )}
+      {geprueft && mehrfach && (
+        <p role="status" className="mt-2 text-sm">
+          {alleRichtig ? "Richtig." : "Noch nicht ganz: Die richtigen Antworten sind markiert."}
+        </p>
+      )}
+    </div>
   );
 }
 
 /** Eine Option; `richtig` liest `Optionen`. */
 export function Option({ children }: { children: ReactNode; richtig?: boolean }) {
   return <>{children}</>;
+}
+
+/** Erklärung für alle Optionen einer Auswahlfrage, sichtbar nach der Wahl. */
+function Auswahlerklaerung({ children }: { children: ReactNode }) {
+  const { aufgedeckt } = useAufgedeckt();
+  if (!aufgedeckt) return null;
+  return (
+    <div className="mt-3 text-sm leading-5 text-muted-foreground [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
+      {children}
+    </div>
+  );
 }
 
 /** Rechenfrage: Zahl eingeben, prüfen, dann den Lösungsweg aufdecken. */
@@ -170,16 +197,17 @@ export function Rechenfrage({
   einheit?: string;
   children: ReactNode;
 }) {
+  const [frage, ...loesung] = Children.toArray(children);
   return (
-    <FrageRahmen>
+    <FrageRahmen art="Rechnen">
       <AufdeckBereich>
-        {Children.toArray(children)[0]}
+        {frage}
         <Rechenfeld
           ergebnis={leseZahl(String(ergebnis))}
           toleranz={leseZahl(String(toleranz))}
           einheit={einheit}
         />
-        {Children.toArray(children).slice(1)}
+        {loesung}
       </AufdeckBereich>
     </FrageRahmen>
   );
@@ -205,45 +233,52 @@ function Rechenfeld({
     if (richtig) setAufgedeckt(true);
   };
   return (
-    <div className="mt-2">
-      <div className="flex flex-wrap items-end gap-3">
+    <div className="mt-3">
+      <div className="flex flex-wrap items-center gap-2">
         <label htmlFor={id} className="sr-only">
-          Dein Ergebnis
+          Dein Ergebnis{einheit ? ` in ${einheit}` : ""}
         </label>
-        <div className="flex items-end gap-2">
-          <Input
-            id={id}
-            inputMode="decimal"
-            placeholder="Dein Ergebnis"
-            value={eingabe}
-            onChange={(e) => {
-              setEingabe(e.target.value);
-              setGeprueft(null);
-            }}
-            onKeyDown={(e) => e.key === "Enter" && pruefen()}
-            className="w-36"
-          />
-          {einheit && <span className="pb-1.5 text-sm">{einheit}</span>}
-        </div>
-        <Button variant="outline" size="sm" disabled={!eingabe.trim()} onClick={pruefen}>
+        <Input
+          id={id}
+          inputMode="decimal"
+          placeholder="Ergebnis"
+          aria-invalid={geprueft === false || undefined}
+          value={eingabe}
+          onChange={(e) => {
+            setEingabe(e.target.value);
+            setGeprueft(null);
+          }}
+          onKeyDown={(e) => e.key === "Enter" && pruefen()}
+          className="w-35 font-mono"
+        />
+        {einheit && <span className="text-sm">{einheit}</span>}
+        <Button className="ml-2" disabled={!eingabe.trim()} onClick={pruefen}>
           Prüfen
         </Button>
-        {!aufgedeckt && (
-          <Button variant="ghost" size="sm" onClick={() => setAufgedeckt(true)}>
+        {!aufgedeckt && geprueft === false && (
+          <Button variant="ghost" onClick={() => setAufgedeckt(true)}>
             Lösung zeigen
           </Button>
         )}
       </div>
       {geprueft !== null && (
-        <p role="status" className="mt-2 flex items-center gap-1.5 text-sm">
+        <p
+          role="status"
+          className={
+            geprueft
+              ? "mt-2.5 flex items-center gap-1.5 text-sm"
+              : "mt-2.5 flex items-center gap-1.5 text-sm text-destructive"
+          }
+        >
           {geprueft ? (
             <>
-              <Check aria-hidden className="size-4" /> Richtig: {groesse(ergebnis, einheit)}.
+              <Check aria-hidden className="size-4" /> Richtig:{" "}
+              <span className="font-mono">{groesse(ergebnis, einheit)}</span>.
             </>
           ) : (
             <>
-              <X aria-hidden className="size-4 text-destructive" /> Noch nicht. Rechne noch einmal
-              nach oder deck die Lösung auf.
+              <X aria-hidden className="size-4" /> Noch nicht. Rechne noch einmal nach oder deck die
+              Lösung auf.
             </>
           )}
         </p>

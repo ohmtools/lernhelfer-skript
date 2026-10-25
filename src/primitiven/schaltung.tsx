@@ -102,7 +102,7 @@ function Zweipol({ props, koerper }: { props: ZweipolProps; koerper: Koerper }) 
   const iRichtung = props.stromUmkehren ? -1 : 1;
 
   return (
-    <g className={akzent ? "text-primary" : undefined}>
+    <g className={akzent ? "text-red" : undefined}>
       <path
         d={`M${a[0]},${a[1]} L${start[0]},${start[1]} M${ende[0]},${ende[1]} L${b[0]},${b[1]}`}
       />
@@ -330,7 +330,7 @@ export function Leitung({ punkte, akzent }: { punkte: Wertbar<P[]>; akzent?: Wer
   const hervor = useWert(akzent ?? false);
   return (
     <path
-      className={hervor ? "text-primary" : undefined}
+      className={hervor ? "text-red" : undefined}
       d={pts.map(([x, y], i) => `${i ? "L" : "M"}${x},${y}`).join(" ")}
     />
   );
@@ -407,7 +407,7 @@ function Mehrpol({
   const q = (dx: number, dy: number) => px([bei[0] + dx, bei[1] + dy]);
   const [nx, ny, anker] = namePos ?? [0, 1.1, "oben"];
   return (
-    <g className={hervor ? "text-primary" : undefined}>
+    <g className={hervor ? "text-red" : undefined}>
       {children(q)}
       {name && <TextBei px={q(nx, ny)} text={alsText(name)} anker={anker} />}
     </g>

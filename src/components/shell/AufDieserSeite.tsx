@@ -1,8 +1,13 @@
 import { cn } from "cn";
+import { useAnsicht } from "@/lib/ansicht";
 import type { Kapitel } from "@/lib/kapitel";
 import type { Ort } from "@/lib/navigation";
 
-/** Rechte Spalte: Abschnitte des aktuellen Kapitels, der sichtbare markiert. */
+/**
+ * Rechte Spalte: Abschnitte des Kapitels und darunter eingerückt seine
+ * Ergänzungen mit rotem Punkt; der Abschnitt, in dem man liest, schwarz mit
+ * eigener Linie.
+ */
 export function AufDieserSeite({
   kapitel,
   aktiv,
@@ -12,25 +17,31 @@ export function AufDieserSeite({
   aktiv?: string;
   onGehe: (ort: Ort) => void;
 }) {
-  if (!kapitel.gliederung.length) return null;
+  const { mitErgaenzungen } = useAnsicht();
+  const eintraege = kapitel.gliederung.filter((g) => mitErgaenzungen || !g.ergaenzung);
+  if (!eintraege.length) return null;
   return (
-    <nav aria-label="Auf dieser Seite">
-      <p className="mb-3 text-xs font-semibold">Auf dieser Seite</p>
-      <ul className="space-y-1">
-        {kapitel.gliederung.map((g) => (
+    <nav aria-label="Auf dieser Seite" className="text-sm">
+      <h2 className="mb-3 font-medium">Auf dieser Seite</h2>
+      <ul className="flex flex-col border-l">
+        {eintraege.map((g) => (
           <li key={g.id}>
             <button
               type="button"
               aria-current={aktiv === g.id ? "location" : undefined}
               className={cn(
-                "w-full border-l-2 py-0.5 text-left text-xs leading-snug hover:text-foreground",
-                g.tiefe > 2 ? "pl-6" : "pl-3",
+                "-ml-px flex w-full items-center gap-2 border-l py-1 text-left leading-5 hover:text-foreground",
+                g.ergaenzung ? "pl-6" : g.tiefe > 2 ? "pl-6" : "pl-3",
                 aktiv === g.id
-                  ? "border-primary text-foreground"
+                  ? "border-foreground font-medium text-foreground"
                   : "border-transparent text-muted-foreground",
               )}
               onClick={() => onGehe({ kapitel: kapitel.schluessel, abschnitt: g.id })}
             >
+              {g.ergaenzung && (
+                <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-red" />
+              )}
+              {g.ergaenzung && <span className="sr-only">Ergänzung:</span>}
               {g.titel}
             </button>
           </li>

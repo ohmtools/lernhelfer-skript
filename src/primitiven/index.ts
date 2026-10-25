@@ -3,6 +3,7 @@ import * as prosa from "@/primitiven/prosa";
 import {
   Anmerkung,
   AnmInline,
+  AnmWort,
   Antwort,
   Denkanstoss,
   Fragen,
@@ -45,6 +46,7 @@ export const komponenten = {
   // Ergänzungen (plugins/ergaenzungen.mjs)
   Anmerkung,
   AnmInline,
+  AnmWort,
   Variablen,
   Denkanstoss,
   Grafik,

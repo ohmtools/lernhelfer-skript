@@ -33,8 +33,10 @@ Datei.
 ## Design
 
 Folgt dem ohmtools-Design: https://github.com/ohmtools/design, Regeln in dessen
-DESIGN.md (shadcn base-sera, Red auf Neutral, Inter; keine Großbuchstaben,
-keine Boxen, kein Umschalter für das Farbschema). Farben nur über dessen
+DESIGN.md (shadcn base-vega, zeiteisens Theme, Geist; keine Großbuchstaben,
+keine Boxen, kein Umschalter für das Farbschema; Abschnitt „Reading pages“
+für diese Seite, Vorbild die Zeichenfläche „Übungsblatt und Skript“, Seite
+„A3 Datenblatt“). Farben nur über dessen
 Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 ändern soll, wird zuerst dort geändert, für alle Apps. Referenz ist
 `ohmtools/zeiteisen`.
@@ -42,15 +44,26 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 - `components.json` und der Theme-Teil von `src/index.css` sind unveränderte
   Kopien aus `ohmtools/design`; eigenes CSS (Shiki- und Mafs-Variablen auf
   Tokens, Formelnummern) steht am Ende von `src/index.css`.
-- Ergänzungen: rote Linie links und „Ergänzung · …“ (Farbe nie einziger
-  Hinweis), keine Kästen; Kurven in Graphen unterscheiden sich in Farbe und
-  Strichart.
-- Desktop (`desktop:`): drei Spalten in einem Viewport, jede scrollt für sich
-  (Kapitel und Suche, Kapitel, ab `xl` „Auf dieser Seite“). Darunter
-  Tab-Leiste „Skript | Inhalt | Einstellungen“ wie zeiteisen (Wunsch des
-  Nutzers: fumadocs-artig am Desktop, ohmtools-Regeln am Handy).
-- Ein Kapitel pro Seite mit „Zurück/Weiter“ (Wunsch des Nutzers), Suche über
-  alle Kapitel (minisearch, Text aus dem Export `suchtext` jedes Kapitels).
+- Rot heißt „ergänzt“: Jede Ergänzung ist ein Block im Text (nie am Rand)
+  mit rotem Badge „Ergänzung“, Titel und roter Linie darunter (Farbe nie
+  einziger Hinweis), keine Kästen; `:anm` unterstreicht das Wort davor rot
+  gepunktet und öffnet ein Popover. Originaltext bleibt ohne Rot. Die erste
+  Kurve eines Graphen in `--kurve` (chart-3 hell, chart-2 dunkel), weitere
+  in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
+  Millimeterpapier wie im Übungsblatt.
+- Kopf (56 px): Titel, „Kapitel 2 / 3“, Tabs „Mit Ergänzungen | Nur
+  Original“ und die Knöpfe „Auf dieser Seite“ und „Einstellungen“. `wide:`:
+  drei Spalten in einem Viewport, jede scrollt für sich (Suche und Kapitel
+  280 px, Seite höchstens 720 px, rechts „Auf dieser Seite“ 280 px oder das
+  Panel „Einstellungen“ 340 px; „Auf dieser Seite“ ist beim Start erst ab
+  80rem offen). Darunter eine Spalte und die Leiste „Skript | Inhalt |
+  Einstellungen“ (Tabs).
+- Eine Seite pro Kapitel mit „Zurück/Weiter“ (Wunsch des Nutzers), danach
+  eine eigene Seite „Wiederholungsfragen“ (`#/{kapitel}/wiederholungsfragen`):
+  `KapitelSeite` rendert dort das ganze Kapitel und zeigt nur den Block
+  `Fragen` (`data-fragen`). Suche über alle Kapitel (minisearch, Export
+  `suchtext`: Original und Ergänzungen getrennt, die Fragen als eigener
+  Abschnitt).
 - Abweichungen von DESIGN.md, weil die Seite eine Datei ist: Das
   Dunkelmodus-Skript steht inline in `index.html` (DESIGN.md will
   `public/dark.js` wegen der CSP, die es im Artefakt nicht gibt). Die
@@ -75,8 +88,11 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Absatz eine `Abbildung`, `:::abbildung` die Teilbilder (`Abbildungen`,
   `Teilbild`, gemeinsame `Bildunterschrift` zuletzt, wie im PDF; so zählt
   sie auch `original.mjs`); Absätze unter einer Option von `:::auswahl` sind
-  ihre `Optionserklaerung`; Exporte `titel`, `gliederung`, `seiten`,
-  `suchtext`.
+  ihre `Optionserklaerung`; Exporte `titel`, `gliederung` (Abschnitte und
+  Ergänzungen als Block, diese mit Anker für „Auf dieser Seite“), `seiten`,
+  `suchtext`, `fragen` (Zahl der Wiederholungsfragen). Nur für die Webseite
+  (`mdx: true`) wandert das Wort vor `:anm` als `AnmWort` in die Anmerkung;
+  die Prüfung des Wortlauts sieht den Baum ohne diesen Schritt.
 - `src/primitiven/`: alle Bausteine, `index.ts` ist die Liste für jedes
   Kapitel. `flaeche.tsx` ist die Zeichenfläche für `Zeichnung` und
   `Schaltung` (Raster 40 px, y nach oben, Beschriftungen als HTML mit KaTeX
@@ -92,8 +108,8 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
 - `src/pruefen.tsx` rendert jedes Kapitel für `npm run pruefen` auf dem
   Server (Vite im Middleware-Modus); Mafs rendert dort nichts, deshalb
   rechnen `Kurve` und `Zeiger` auf dem Server ihre Funktionen nur nach.
-- `vite.config.ts`: KaTeX-Schriften nur als woff2, Inter ohne Kyrillisch,
-  Vietnamesisch und erweitertes Griechisch (`nurEinbetten`), Titel aus
+- `vite.config.ts`: KaTeX-Schriften nur als woff2, Geist und Geist Mono ohne
+  Kyrillisch und Vietnamesisch (`nurEinbetten`), Titel aus
   `skript.json`, Erstellungszeit in deutscher Zeit. Ziel unter 2,5 MB ohne
   Bilder (CI).
 

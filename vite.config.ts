@@ -8,9 +8,9 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 import { rehypePlugins, remarkPlugins, remarkRehypeOptions } from "./plugins/pipeline.mjs";
 
 // Schriften, die nicht in die HTML-Datei kommen: Browser nehmen woff2 und
-// fragen nie nach woff/ttf; Inter ohne Kyrillisch, Vietnamesisch und
-// erweitertes Griechisch. Ihre @font-face-Einträge entfernt `nurEinbetten`.
-const NICHT_EINBETTEN = /\.(woff|ttf)$|inter-(cyrillic|cyrillic-ext|greek-ext|vietnamese)-/;
+// fragen nie nach woff/ttf; Geist und Geist Mono ohne Kyrillisch und
+// Vietnamesisch. Ihre @font-face-Einträge entfernt `nurEinbetten`.
+const NICHT_EINBETTEN = /\.(woff|ttf)$|geist(-mono)?-(cyrillic|cyrillic-ext|vietnamese)-/;
 
 /** Entfernt Verweise auf nicht eingebettete Dateien aus dem CSS und die Dateien selbst. */
 function nurEinbetten(): Plugin {
@@ -24,7 +24,7 @@ function nurEinbetten(): Plugin {
         let css = String(datei.source);
         for (const name of weg) {
           const base = path.basename(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          // Ein ganzer Eintrag, wenn er nur diese Datei nennt (Inter-Teilmengen) …
+          // Ein ganzer Eintrag, wenn er nur diese Datei nennt (Geist-Teilmengen) …
           css = css.replace(new RegExp(`@font-face\\{[^}]*url\\([^)]*${base}\\)[^}]*\\}`, "g"), (block) =>
             /url\(data:/.test(block) ? block : "",
           );

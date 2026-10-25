@@ -224,18 +224,18 @@ und Autor stehen nur hier, die Gliederung zeigt die Seite selbst.
 ## 7. Ergänzungen
 
 Ergänzungen schreibst du als Markierungen mit drei Doppelpunkten. Sie
-erscheinen mit einer roten Linie links und der Beschriftung „Ergänzung · …“
-und lassen sich mit „Nur Original“ ausblenden. Innen steht normales Markdown
-mit Formeln.
+erscheinen als Block im Text: oben das rote Badge „Ergänzung“ und der Titel,
+darunter eine rote Linie. „Nur Original“ blendet sie aus. Innen steht
+normales Markdown mit Formeln.
 
 | Markierung | Wofür |
 |---|---|
 | `:::variablen` | Direkt nach jeder Gleichung, deren Symbole der Text dort nicht erklärt: jedes Symbol mit Bedeutung und Einheit. |
 | `:::anmerkung[Titel]` | Fehlender Zwischenschritt, Anschauung, Zusammenhang, Erklärung einer Abbildung (Titel z.B. „Zur Abbildung 3.2“). Titel freiwillig. |
-| `:::denkanstoss[Frage]` | Eine Frage zum Selbstdenken; der Inhalt ist die Auflösung, verdeckt bis „Auflösung zeigen“. |
+| `:::denkanstoss[Frage]` | Eine Frage zum Selbstdenken; der Inhalt ist die Auflösung, verdeckt bis „Antwort zeigen“. |
 | `:::grafik[Titel]` | Eine eigene Grafik aus Bausteinen (Kapitel 9 bis 11), darunter ein, zwei Sätze. |
 | `:::interaktiv[Titel]` | Etwas zum Ausprobieren mit Reglern (Kapitel 12), darunter ein Satz „Probier: …“. |
-| `:anm[…]` | Ein kurzer Hinweis mitten im Satz, z.B. `Widerstand:anm[der Wert R, nicht das Bauteil]`. |
+| `:anm[…]` | Ein kurzer Hinweis zu einem Wort, direkt dahinter ohne Leerzeichen, z.B. `Widerstand:anm[der Wert R, nicht das Bauteil]`: Das Wort wird rot gepunktet unterstrichen und öffnet den Hinweis. |
 
 ```markdown
 $$
@@ -271,8 +271,9 @@ Wiederholungsfragen fragen das Kapitel aus dem Gedächtnis ab: kurz, ohne
 neues Wissen, nicht trivial. Sie stehen gesammelt am Ende des Kapitels, drei
 bis acht, je nach Länge, und decken seine wichtigsten Abschnitte ab. Die
 meisten fragen nach Verständnis (`:::frage`, `:::auswahl`), höchstens ein
-Drittel sind Rechenfragen (`:::rechnen`). Fragen hintereinander erscheinen
-als ein Block „Wiederholungsfragen“, nummeriert. Die Antwort bleibt verdeckt,
+Drittel sind Rechenfragen (`:::rechnen`). Die Webseite zeigt sie auf einer
+eigenen Seite „Wiederholungsfragen“ nach dem Kapitel, nummeriert und mit
+ihrer Art („Erklären“, „Auswahl“, „Rechnen“). Die Antwort bleibt verdeckt,
 bis der Leser sie aufdeckt.
 
 ```markdown
@@ -301,11 +302,11 @@ $I = U/R = 12\,\mathrm{V} / 4{,}7\,\mathrm{k\Omega} \approx 2{,}55\,\mathrm{mA}$
   mindestens eine richtig; eine richtige Antwort → Optionsfelder, mehrere →
   Kästchen. Jede falsche Option steht für eine echte Fehlvorstellung und
   bekommt ihre eigene Erklärung: nach einer Leerzeile als eingerückter Absatz
-  unter der Option. Nach „Prüfen“ steht sie unter der Option, wenn der Leser
-  sie gewählt hat; die Erklärung einer richtigen Option, wenn er sie gewählt
-  oder vergessen hat. Text nach der Liste gilt für alle Optionen und
-  erscheint nach dem Prüfen; schreib dort nichts, das nur zu einer Option
-  passt.
+  unter der Option. Nach der Wahl (bei mehreren richtigen nach „Prüfen“)
+  steht sie unter der Option, wenn der Leser sie gewählt hat; die Erklärung
+  einer richtigen Option, wenn er sie gewählt oder vergessen hat. Text nach
+  der Liste gilt für alle Optionen und erscheint danach; schreib dort nichts,
+  das nur zu einer Option passt.
 - `:::rechnen[Frage]{ergebnis=… toleranz=… einheit="…"}`: `ergebnis` und
   `toleranz` mit Punkt als Dezimalzeichen in der Einheit der Frage, `toleranz`
   absolut (±). Der Inhalt ist der Lösungsweg. Rechne das Ergebnis nach.
@@ -440,9 +441,11 @@ Eingang bei (−1,2 | 0)), `nand`, `nor`, `xnor` (mit Negationskreis);
   `xSchritt`, `ySchritt`: Rasterabstand (sonst automatisch); `hoehe` in px
   (Standard 280); `beschriftung`.
 - `Kurve f={(x) => …}`: eine Funktion in JavaScript (`Math.exp`, `Math.sin`,
-  `Math.sqrt`, `Math.PI` …), Bogenmaß. `name` kommt in die Legende,
-  `bereich={[a, b]}` begrenzt sie. Kurven unterscheiden sich von selbst in
-  Farbe und Strichart, setze keine Farben.
+  `Math.sqrt`, `Math.PI` …), Bogenmaß. `name` steht am Ende der Kurve (eine
+  Legende gibt es nicht), `bereich={[a, b]}` begrenzt sie. Die erste Kurve
+  ist rot und kräftig, jede weitere hat eigene Farbe und Strichart (die
+  zweite grau gestrichelt, gut für eine Bezugslinie wie „63 %“); setze keine
+  Farben.
 - `Punkt x y text anker`: ein markierter Punkt.
 - Ohne Kurven ist es ein leeres Koordinatensystem.
 - Logarithmische Achsen gibt es nicht: rechne in Zehnerpotenzen und
@@ -521,7 +524,11 @@ Probier: Verdopple $R$ oder $C$. Wohin wandert der Punkt bei $\tau$?
 | `Regler art="schalter"` | zwei Zustände 0 und 1, beschriftet mit `aus` und `an` (z.B. `aus="offen" an="geschlossen"`) |
 | `Regler art="zeit"` | eine Animation: ein Regler mit „Abspielen“, der von `min` nach `max` läuft, in `dauer` Sekunden (Standard 5), danach von vorn (`wiederholen={false}` hält am Ende an). Sonst wie `Regler`. |
 | `Rechnung` | `name`, `wert` (Funktion der Werte): rechnet einmal einen Wert oder eine Funktion aus, den die Bausteine danach wie einen Regler lesen. Zeigt nichts an. |
-| `Wert` | `tex` (linke Seite), `wert` (Zahl oder Funktion), `einheit`, `stellen` (gültige Ziffern, Standard 3) |
+| `Wert` | `tex` (linke Seite; mit „=“ wie `\tau = RC` steht die Rechnung grau neben dem Zeichen), `wert` (Zahl oder Funktion), `einheit`, `stellen` (gültige Ziffern, Standard 3) |
+
+Die Webseite ordnet einen `:::interaktiv` selbst: erst Schaltungen und
+Graphen, dann alle `Regler` und `Wert` als Tabelle „Parameter | Wert“, zuletzt
+der Text („Probier: …“). Die Reihenfolge im Quelltext ist dafür egal.
 
 - Werte in **SI-Grundeinheiten** (Ω, F, s, V, A); die Anzeige setzt selbst
   Vorsätze und Dezimalkomma: 0.000001 F → „1 µF“.

@@ -1,63 +1,92 @@
 import { cn } from "cn";
-import { KAPITEL } from "@/lib/kapitel";
+import { ErgaenzungBadge } from "@/primitiven/ergaenzungen";
+import { FRAGENSEITE, KAPITEL, nummerUndTitel } from "@/lib/kapitel";
 import type { Ort } from "@/lib/navigation";
 
-// Kapitel des Skripts, beim aktuellen auch seine Abschnitte. Das aktive
-// Kapitel und der aktive Abschnitt tragen eine rote Linie (ohmtools-Design:
-// aktive Marke in primary, kein gefüllter Knopf).
+// Kapitel als Knöpfe wie in shadcns Sidebar (DESIGN.md, „Reading pages“):
+// Nummer klein in Geist Mono, das offene Kapitel mit `accent` gefüllt,
+// darunter seine Abschnitte ohne Nummer und die Wiederholungsfragen mit dem
+// roten Badge. Am Handy (`gross`) 44 px hohe Zeilen.
 export function Kapitelbaum({
   ort,
   aktiv,
   onGehe,
+  gross = false,
 }: {
   ort: Ort;
   aktiv?: string;
   onGehe: (ort: Ort) => void;
+  gross?: boolean;
 }) {
+  const knopf = cn(
+    "flex w-full items-center gap-2.5 rounded-md px-2 text-left text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+    gross ? "min-h-11" : "min-h-8",
+  );
   return (
-    <ul className="space-y-1 text-sm" aria-label="Kapitel">
-      {KAPITEL.map((k) => {
-        const offen = k.schluessel === ort.kapitel;
-        return (
-          <li key={k.schluessel}>
-            <button
-              type="button"
-              aria-current={offen ? "page" : undefined}
-              className={cn(
-                "w-full border-l-2 py-1 pl-3 text-left leading-snug hover:text-foreground",
-                offen
-                  ? "border-primary font-semibold text-foreground"
-                  : "border-transparent text-muted-foreground",
+    <nav aria-label="Kapitel">
+      <p className="px-2 pb-1.5 text-xs font-medium text-muted-foreground">Kapitel</p>
+      <ul className="flex flex-col gap-0.5">
+        {KAPITEL.map((k) => {
+          const offen = k.schluessel === ort.kapitel;
+          const { nummer, titel } = nummerUndTitel(k.titel);
+          const abschnitte = k.gliederung.filter((g) => !g.ergaenzung && g.tiefe === 2);
+          const fragen = offen && ort.abschnitt === FRAGENSEITE;
+          return (
+            <li key={k.schluessel}>
+              <button
+                type="button"
+                aria-current={offen && !fragen ? "page" : undefined}
+                className={cn(
+                  knopf,
+                  offen && !fragen && "bg-accent font-medium text-foreground",
+                  offen && fragen && "font-medium text-foreground",
+                )}
+                onClick={() => onGehe({ kapitel: k.schluessel })}
+              >
+                <span className="w-3.5 shrink-0 font-mono text-xs">{nummer}</span>
+                <span className="py-1.5">{titel}</span>
+              </button>
+              {offen && (abschnitte.length > 0 || k.fragen > 0) && (
+                <ul className="mt-0.5 flex flex-col gap-0.5">
+                  {abschnitte.map((g) => (
+                    <li key={g.id}>
+                      <button
+                        type="button"
+                        aria-current={!fragen && aktiv === g.id ? "location" : undefined}
+                        className={cn(
+                          knopf,
+                          "pl-8",
+                          !fragen && aktiv === g.id && "text-foreground",
+                        )}
+                        onClick={() => onGehe({ kapitel: k.schluessel, abschnitt: g.id })}
+                      >
+                        <span className="py-1.5">{nummerUndTitel(g.titel).titel}</span>
+                      </button>
+                    </li>
+                  ))}
+                  {k.fragen > 0 && (
+                    <li>
+                      <button
+                        type="button"
+                        aria-current={fragen ? "page" : undefined}
+                        className={cn(
+                          knopf,
+                          "justify-between pl-8",
+                          fragen && "bg-accent font-medium text-foreground",
+                        )}
+                        onClick={() => onGehe({ kapitel: k.schluessel, abschnitt: FRAGENSEITE })}
+                      >
+                        <span className="py-1.5">Wiederholungsfragen</span>
+                        <ErgaenzungBadge />
+                      </button>
+                    </li>
+                  )}
+                </ul>
               )}
-              onClick={() => onGehe({ kapitel: k.schluessel })}
-            >
-              {k.titel}
-            </button>
-            {offen && k.gliederung.length > 0 && (
-              <ul className="mt-1 mb-2 space-y-0.5">
-                {k.gliederung.map((g) => (
-                  <li key={g.id}>
-                    <button
-                      type="button"
-                      aria-current={aktiv === g.id ? "location" : undefined}
-                      className={cn(
-                        "w-full border-l-2 py-0.5 text-left text-xs leading-snug hover:text-foreground",
-                        g.tiefe > 2 ? "pl-8" : "pl-5",
-                        aktiv === g.id
-                          ? "border-primary text-foreground"
-                          : "border-transparent text-muted-foreground",
-                      )}
-                      onClick={() => onGehe({ kapitel: k.schluessel, abschnitt: g.id })}
-                    >
-                      {g.titel}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

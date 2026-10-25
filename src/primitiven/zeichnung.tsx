@@ -9,7 +9,7 @@ import { EINHEIT, Flaeche, TextBei, useFlaeche, type Anker, type P } from "@/pri
 export type Stil = "normal" | "akzent" | "hilfslinie";
 
 export function stilProps(stil: Stil = "normal") {
-  if (stil === "akzent") return { className: "text-primary", stroke: "currentColor" };
+  if (stil === "akzent") return { className: "text-red", stroke: "currentColor" };
   if (stil === "hilfslinie")
     return { className: "text-muted-foreground", strokeDasharray: "4 4", strokeWidth: 1 };
   return {};
@@ -172,11 +172,7 @@ export function Beschriftung({
       text={useWert(text)}
       anker={anker}
       className={
-        stil === "akzent"
-          ? "text-primary"
-          : stil === "hilfslinie"
-            ? "text-muted-foreground"
-            : undefined
+        stil === "akzent" ? "text-red" : stil === "hilfslinie" ? "text-muted-foreground" : undefined
       }
     />
   );

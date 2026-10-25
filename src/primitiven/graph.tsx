@@ -16,20 +16,35 @@ import { zahl } from "@/lib/format";
 import { useExperiment, useWert, type Werte, type Wertbar } from "@/primitiven/experiment";
 import { Gemischt, type Anker } from "@/primitiven/flaeche";
 
-// Funktionsgraphen und Zeigerdiagramme mit Mafs. Kurven unterscheiden sich in
-// Farbe UND Strichart (Farbe ist nie der einzige Hinweis), Farben nur aus
-// den Tokens (index.css stellt Mafs darauf ein). Beschriftungen sind HTML
-// mit KaTeX über dem Graphen.
+// Funktionsgraphen und Zeigerdiagramme mit Mafs auf Millimeterpapier
+// (DESIGN.md, „Interactive parts and graphs“). Die erste Kurve in --kurve,
+// 2,5 px; weitere unterscheiden sich in Farbe UND Strichart (Farbe ist nie
+// der einzige Hinweis), etwa eine Bezugslinie grau gestrichelt. Keine
+// Legende: Der Name steht am Ende der Kurve. Beschriftungen sind HTML mit
+// KaTeX über dem Graphen.
 
 const STILE = [
-  { farbe: "var(--chart-3)", strich: undefined, name: "durchgezogen" },
-  { farbe: "var(--foreground)", strich: "7 5", name: "gestrichelt" },
-  { farbe: "var(--chart-2)", strich: "2 4", name: "gepunktet" },
-  { farbe: "var(--muted-foreground)", strich: "9 4 2 4", name: "Strich-Punkt" },
+  { farbe: "var(--kurve)", strich: undefined, breite: 2.5 },
+  { farbe: "var(--muted-foreground)", strich: "6 4", breite: 1.5 },
+  { farbe: "var(--foreground)", strich: "2 4", breite: 2 },
+  { farbe: "var(--muted-foreground)", strich: "9 4 2 4", breite: 1.5 },
+];
+const ZEIGER = [
+  { farbe: "var(--kurve)", strich: undefined, breite: 2.5 },
+  { farbe: "var(--foreground)", strich: "7 5", breite: 2 },
+  { farbe: "var(--muted-foreground)", strich: "2 4", breite: 2 },
 ];
 
 type Achse = { min: number; max: number };
-type Graph = { x: Achse; y: Achse; breite: number; hoehe: number; ebene: HTMLDivElement | null };
+type Graph = {
+  x: Achse;
+  y: Achse;
+  /** Rechtes Ende des gewünschten Bereichs (ohne Rand), für die Namen der Kurven. */
+  xEnde: number;
+  breite: number;
+  hoehe: number;
+  ebene: HTMLDivElement | null;
+};
 const GraphContext = createContext<Graph | null>(null);
 
 function px(g: Graph, [x, y]: [number, number]): [number, number] {
@@ -50,10 +65,12 @@ function GraphText({
   bei,
   text,
   anker = "oben rechts",
+  farbe,
 }: {
   bei: [number, number];
   text: string;
   anker?: Anker;
+  farbe?: string;
 }) {
   const g = useContext(GraphContext);
   if (!g?.ebene) return null;
@@ -74,7 +91,12 @@ function GraphText({
   return createPortal(
     <span
       className="absolute leading-none whitespace-nowrap"
-      style={{ left: x + dx, top: y + dy, transform: `translate(${verschiebung[anker]})` }}
+      style={{
+        left: x + dx,
+        top: y + dy,
+        transform: `translate(${verschiebung[anker]})`,
+        color: farbe,
+      }}
     >
       <Gemischt text={text} />
     </span>,
@@ -127,6 +149,7 @@ function Rahmen({
       ? { min: xMitte - xSpanne / 2, max: xMitte + xSpanne / 2 }
       : { min: x[0] - rx, max: x[1] + rx / 3 },
     y: { min: y[0] - ry, max: y[1] },
+    xEnde: x[1],
     breite,
     hoehe: h,
     ebene,
@@ -153,9 +176,7 @@ function Rahmen({
       </div>
       {unten}
       {beschriftung && (
-        <figcaption className="mt-2 text-center text-sm text-muted-foreground">
-          {beschriftung}
-        </figcaption>
+        <figcaption className="mt-2 text-sm text-muted-foreground">{beschriftung}</figcaption>
       )}
     </figure>
   );
@@ -170,9 +191,10 @@ type KurveProps = {
   nummer?: number;
 };
 
-/** Eine Kurve in einem `Funktionsgraph`. */
-export function Kurve({ f, bereich, nummer = 0 }: KurveProps) {
+/** Eine Kurve in einem `Funktionsgraph`; ihr Name steht an ihrem Ende. */
+export function Kurve({ f, name, bereich, nummer = 0 }: KurveProps) {
   const { werte } = useExperiment();
+  const g = useContext(GraphContext);
   const stil = STILE[nummer % STILE.length];
   if (import.meta.env.SSR) {
     // Auf dem Server (npm run pruefen) nur prüfen, dass f rechnet.
@@ -180,14 +202,21 @@ export function Kurve({ f, bereich, nummer = 0 }: KurveProps) {
       f((bereich?.[0] ?? 0) + t * ((bereich?.[1] ?? 1) - (bereich?.[0] ?? 0)), werte);
     return null;
   }
+  const ende = Math.min(bereich?.[1] ?? Infinity, g?.xEnde ?? Infinity);
+  const yEnde = Number.isFinite(ende) ? f(ende, werte) : NaN;
   return (
-    <Plot.OfX
-      y={(x) => f(x, werte)}
-      domain={bereich}
-      color={stil.farbe}
-      weight={2}
-      svgPathProps={stil.strich ? { strokeDasharray: stil.strich } : undefined}
-    />
+    <>
+      <Plot.OfX
+        y={(x) => f(x, werte)}
+        domain={bereich}
+        color={stil.farbe}
+        weight={stil.breite}
+        svgPathProps={stil.strich ? { strokeDasharray: stil.strich } : undefined}
+      />
+      {name && Number.isFinite(yEnde) && (
+        <GraphText bei={[ende, yEnde]} text={name} anker="oben links" farbe={stil.farbe} />
+      )}
+    </>
   );
 }
 Kurve.istKurve = true;
@@ -210,8 +239,8 @@ export function Punkt({
   if (import.meta.env.SSR) return null;
   return (
     <>
-      <Point x={px} y={py} color="var(--foreground)" />
-      {t && <GraphText bei={[px, py]} text={t} anker={anker} />}
+      <Point x={px} y={py} color="var(--kurve)" />
+      {t && <GraphText bei={[px, py]} text={t} anker={anker} farbe="var(--kurve)" />}
     </>
   );
 }
@@ -274,44 +303,12 @@ export function Hilfslinie({
 
 function nummerieren(children: ReactNode, merkmal: "istKurve" | "istZeiger") {
   let i = 0;
-  const legende: { name: string; nummer: number }[] = [];
-  const kinder = Children.map(children, (kind) => {
+  return Children.map(children, (kind) => {
     if (!isValidElement(kind) || !(kind.type as unknown as Record<string, unknown>)[merkmal])
       return kind;
-    const props = kind.props as { nummer?: number; name?: string };
-    const nummer = props.nummer ?? i++;
-    if (props.name && merkmal === "istKurve") legende.push({ name: props.name, nummer });
-    return cloneElement(kind as ReactElement<{ nummer?: number }>, { nummer });
+    const props = kind.props as { nummer?: number };
+    return cloneElement(kind as ReactElement<{ nummer?: number }>, { nummer: props.nummer ?? i++ });
   });
-  return { kinder, legende };
-}
-
-function Legende({ eintraege }: { eintraege: { name: string; nummer: number }[] }) {
-  if (!eintraege.length) return null;
-  return (
-    <ul className="mt-2 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm">
-      {eintraege.map(({ name, nummer }) => {
-        const stil = STILE[nummer % STILE.length];
-        return (
-          <li key={nummer} className="flex items-center gap-2">
-            <svg width={28} height={8} aria-hidden>
-              <line
-                x1={1}
-                y1={4}
-                x2={27}
-                y2={4}
-                stroke={stil.farbe}
-                strokeWidth={2}
-                strokeDasharray={stil.strich}
-              />
-            </svg>
-            <Gemischt text={name} />
-            <span className="sr-only">({stil.name})</span>
-          </li>
-        );
-      })}
-    </ul>
-  );
 }
 
 /**
@@ -339,7 +336,7 @@ export function Funktionsgraph({
   beschriftung?: string;
   children?: ReactNode;
 }) {
-  const { kinder, legende } = nummerieren(children, "istKurve");
+  const kinder = nummerieren(children, "istKurve");
   if (import.meta.env.SSR) return <div>{kinder}</div>;
   const sx = xSchritt ?? schritt(x[1] - x[0]);
   const sy = ySchritt ?? schritt(y[1] - y[0]);
@@ -357,14 +354,11 @@ export function Funktionsgraph({
         )
       }
       unten={
-        <>
-          {xText && (
-            <p className="mt-1 text-right text-sm">
-              <Gemischt text={xText} />
-            </p>
-          )}
-          <Legende eintraege={legende} />
-        </>
+        xText && (
+          <p className="mt-1 text-right text-sm">
+            <Gemischt text={xText} />
+          </p>
+        )
       }
     >
       {() => (
@@ -372,6 +366,7 @@ export function Funktionsgraph({
           <Coordinates.Cartesian
             xAxis={{ lines: sx, labels: (n) => zahl(n) }}
             yAxis={{ lines: sy, labels: (n) => zahl(n) }}
+            subdivisions={5}
           />
           {kinder}
         </>
@@ -406,7 +401,7 @@ export function Zeiger({
     a[1] + r * Math.sin((w * Math.PI) / 180),
   ];
   if (import.meta.env.SSR) return null;
-  const stil = STILE[nummer % STILE.length];
+  const stil = ZEIGER[nummer % ZEIGER.length];
   const rechts = b[0] >= a[0];
   const oben = b[1] >= a[1];
   return (
@@ -415,13 +410,14 @@ export function Zeiger({
         tail={a}
         tip={b}
         color={stil.farbe}
-        weight={2}
+        weight={stil.breite}
         svgLineProps={stil.strich ? { strokeDasharray: stil.strich } : undefined}
       />
       {n && (
         <GraphText
           bei={b}
           text={n}
+          farbe={stil.farbe}
           anker={`${oben ? "oben" : "unten"} ${rechts ? "rechts" : "links"}` as Anker}
         />
       )}
@@ -448,7 +444,7 @@ export function Zeigerdiagramm({
   beschriftung?: string;
   children?: ReactNode;
 }) {
-  const { kinder } = nummerieren(children, "istZeiger");
+  const kinder = nummerieren(children, "istZeiger");
   if (import.meta.env.SSR) return <div>{kinder}</div>;
   return (
     <Rahmen x={x} y={y} gleicherMassstab beschriftung={beschriftung}>

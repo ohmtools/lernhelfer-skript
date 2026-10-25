@@ -1,97 +1,205 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
 import {
-  BookOpenCheck,
-  Lightbulb,
-  MessageSquareText,
-  MousePointerClick,
-  PenLine,
-  Shapes,
-  Sigma,
-} from "lucide-react";
+  Children,
+  createContext,
+  isValidElement,
+  useContext,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { cn } from "cn";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAnsicht } from "@/lib/ansicht";
 import { ExperimentBereich } from "@/primitiven/experiment";
 import { Fehlergrenze } from "@/primitiven/Fehlergrenze";
+import { Versuch } from "@/primitiven/regler";
+import * as prosa from "@/primitiven/prosa";
 
-// Alles, was Claude ergänzt: eine rote Linie links und die Beschriftung
-// „Ergänzung · …“ (Farbe ist nie der einzige Hinweis), keine Kästen. „Nur
+// Alles, was Claude ergänzt, ist ein Block im Text (nie am Rand): oben das
+// rote Badge „Ergänzung“, der Titel und rechts optional die Art, darunter
+// eine rote Linie (DESIGN.md, „Reading pages“). Keine Kästen. „Nur
 // Original“ blendet alle Ergänzungen aus.
 
-type Symbol = typeof Lightbulb;
+/** Das rote Badge, das jede Ergänzung trägt. */
+export const ErgaenzungBadge = ({ className }: { className?: string }) => (
+  <Badge variant="red" className={className}>
+    Ergänzung
+  </Badge>
+);
+
+/** Kopfzeile einer Ergänzung: Badge, Titel, rechts die Art, rote Linie darunter. */
+export function ErgaenzungKopf({ titel, art }: { titel: ReactNode; art?: string }) {
+  return (
+    <div className="flex items-center gap-2.5 border-b-2 border-red pb-2 text-sm">
+      <ErgaenzungBadge />
+      <span className="min-w-0 font-semibold">{titel}</span>
+      {art && (
+        <Badge variant="outline" className="ml-auto">
+          {art}
+        </Badge>
+      )}
+    </div>
+  );
+}
 
 export function Ergaenzung({
-  art,
+  id,
   titel,
-  symbol: Icon,
+  art,
   className,
   children,
 }: {
-  art: string;
-  titel?: string;
-  symbol: Symbol;
+  id?: string;
+  titel: string;
+  art?: string;
   className?: string;
   children: ReactNode;
 }) {
   const { mitErgaenzungen } = useAnsicht();
   if (!mitErgaenzungen) return null;
   return (
-    <aside
-      aria-label={`Ergänzung: ${art}`}
-      className={cn("my-6 border-l-2 border-primary pl-4", className)}
-    >
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-        <Icon aria-hidden className="size-3.5" />
-        Ergänzung · {art}
-      </p>
-      {titel && <p className="mt-1 text-sm font-semibold">{titel}</p>}
-      <div className="mt-2 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{children}</div>
-    </aside>
+    <section id={id} aria-label={`Ergänzung: ${titel}`} className="my-6 scroll-mt-6">
+      <ErgaenzungKopf titel={titel} art={art} />
+      <div className={cn("mt-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0", className)}>
+        {children}
+      </div>
+    </section>
   );
 }
 
-export const Anmerkung = ({ titel, children }: { titel?: string; children: ReactNode }) => (
-  <Ergaenzung art="Anmerkung" titel={titel} symbol={MessageSquareText}>
+type BlockProps = { id?: string; titel?: string; children: ReactNode };
+
+export const Anmerkung = ({ id, titel, children }: BlockProps) => (
+  <Ergaenzung id={id} titel={titel ?? "Anmerkung"}>
     {children}
   </Ergaenzung>
 );
 
-export const Variablen = ({ titel, children }: { titel?: string; children: ReactNode }) => (
-  <Ergaenzung
-    art="Variablen"
-    titel={titel}
-    symbol={Sigma}
-    className="[&_ul]:ml-0 [&_ul]:list-none [&_ul]:space-y-0.5"
-  >
-    {children}
-  </Ergaenzung>
-);
+// Variablen: die Liste `- $u_C$: Bedeutung, in V` als Tabelle „Größe |
+// Bedeutung | Einheit“. Eine Zeile ohne „:“ steht ganz unter „Bedeutung“.
 
-export const Grafik = ({ titel, children }: { titel?: string; children: ReactNode }) => (
-  <Ergaenzung art="Grafik" titel={titel} symbol={Shapes}>
+type Teile = { groesse: ReactNode[]; bedeutung: ReactNode[]; einheit: string };
+
+const kinderVon = (k: ReactNode): ReactNode[] =>
+  isValidElement(k) ? Children.toArray((k.props as { children?: ReactNode }).children) : [];
+
+/** Text eines Listenpunkts, ohne den Absatz einer lockeren Liste. */
+function inhaltDesPunkts(punkt: ReactNode) {
+  const kinder = kinderVon(punkt).filter((k) => !(typeof k === "string" && !k.trim()));
+  return kinder.length === 1 && isValidElement(kinder[0]) && kinder[0].type === prosa.p
+    ? kinderVon(kinder[0])
+    : kinderVon(punkt);
+}
+
+function zerlegen(punkt: ReactNode): Teile {
+  const kinder = inhaltDesPunkts(punkt);
+  const i = kinder.findIndex((k) => typeof k === "string" && k.includes(":"));
+  if (i === -1) return { groesse: [], bedeutung: kinder, einheit: "" };
+  const text = kinder[i] as string;
+  const p = text.indexOf(":");
+  const groesse = [...kinder.slice(0, i), text.slice(0, p)].filter((k) => k !== "");
+  const bedeutung = [text.slice(p + 1).trimStart(), ...kinder.slice(i + 1)].filter((k) => k !== "");
+  // Einheit am Ende: „…, in V“ oder „…, in Farad (F)“
+  let einheit = "";
+  const letzte = bedeutung.at(-1);
+  if (typeof letzte === "string") {
+    const m = /,\s*in\s+([^,]+?)\s*$/.exec(letzte);
+    if (m) {
+      einheit = m[1];
+      bedeutung[bedeutung.length - 1] = letzte.slice(0, m.index);
+    }
+  }
+  return { groesse, bedeutung, einheit };
+}
+
+export function Variablen({ id, titel, children }: BlockProps) {
+  const istListe = (k: ReactNode): k is ReactElement =>
+    isValidElement(k) && (k.type === prosa.ul || k.type === prosa.ol);
+  const kinder = Children.toArray(children);
+  const punkte = kinder.filter(istListe).flatMap((l) => kinderVon(l).filter(isValidElement));
+  const zeilen = punkte.map(zerlegen);
+  const rest = kinder.filter((k) => !istListe(k) && !(typeof k === "string" && !k.trim()));
+  return (
+    <Ergaenzung id={id} titel={titel ?? "Variablen"} className="text-sm">
+      {zeilen.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b text-left">
+                <th className="h-10 pr-2 font-medium">Größe</th>
+                <th className="h-10 px-2 font-medium">Bedeutung</th>
+                <th className="h-10 pl-2 text-right font-medium">Einheit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {zeilen.map((z, i) => (
+                <tr key={i} className="border-b">
+                  <td className="py-2 pr-2 align-top whitespace-nowrap">{z.groesse}</td>
+                  <td className="px-2 py-2 align-top">{z.bedeutung}</td>
+                  <td className="py-2 pl-2 text-right align-top whitespace-nowrap">{z.einheit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {rest.length > 0 && <div className="mt-3 text-base leading-7">{rest}</div>}
+    </Ergaenzung>
+  );
+}
+
+export const Grafik = ({ id, titel, children }: BlockProps) => (
+  <Ergaenzung id={id} titel={titel ?? "Grafik"} art={titel ? "Grafik" : undefined}>
     <Fehlergrenze>{children}</Fehlergrenze>
   </Ergaenzung>
 );
 
-export const Interaktiv = ({ titel, children }: { titel?: string; children: ReactNode }) => (
-  <Ergaenzung art="Zum Ausprobieren" titel={titel} symbol={MousePointerClick}>
+export const Interaktiv = ({ id, titel, children }: BlockProps) => (
+  <Ergaenzung id={id} titel={titel ?? "Interaktiv"} art={titel ? "Interaktiv" : undefined}>
     <Fehlergrenze>
-      <ExperimentBereich>{children}</ExperimentBereich>
+      <ExperimentBereich>
+        <Versuch>{children}</Versuch>
+      </ExperimentBereich>
     </Fehlergrenze>
   </Ergaenzung>
 );
 
-/** Kurzer Hinweis im Satz, z.B. „R:anm[ohmscher Widerstand]“. */
+/** Das Wort, an dem eine Anmerkung hängt; `AnmInline` macht es zum Knopf. */
+export const AnmWort = ({ children }: { children: ReactNode }) => <>{children}</>;
+
+/**
+ * Anmerkung zu einem Wort, `Oszilloskop:anm[Ein Messgerät …]`: Das Wort ist
+ * rot gepunktet unterstrichen und öffnet die Anmerkung. Bei „Nur Original“
+ * bleibt nur das Wort.
+ */
 export function AnmInline({ children }: { children: ReactNode }) {
   const { mitErgaenzungen } = useAnsicht();
-  if (!mitErgaenzungen) return null;
+  const kinder = Children.toArray(children);
+  const wort = kinder.filter((k) => isValidElement(k) && k.type === AnmWort);
+  const text = kinder.filter((k) => !(isValidElement(k) && k.type === AnmWort));
+  if (!mitErgaenzungen) return <>{wort}</>;
   return (
-    <span className="text-muted-foreground">
-      {" "}
-      <span className="border-b border-primary" title="Ergänzung">
-        [Ergänzung: {children}]
-      </span>
-    </span>
+    <Popover>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className="cursor-pointer border-b-[1.5px] border-dotted border-red leading-[inherit] hover:border-solid"
+          />
+        }
+      >
+        {wort.length ? wort : <span className="text-sm text-muted-foreground">Anmerkung</span>}
+      </PopoverTrigger>
+      <PopoverContent className="w-70 text-sm leading-5">
+        <span className="mb-1 flex items-center gap-2">
+          <ErgaenzungBadge />
+          <span className="font-semibold">Anmerkung</span>
+        </span>
+        {text}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -117,26 +225,34 @@ export function AufdeckBereich({ children }: { children: ReactNode }) {
 }
 
 export const Fragetext = ({ children }: { children: ReactNode }) => (
-  <div className="text-sm font-medium leading-relaxed [&>p]:my-0">{children}</div>
+  <div className="text-base leading-6 font-medium [&>p]:my-0">{children}</div>
 );
 
 export function Antwort({ children }: { children: ReactNode }) {
   const { aufgedeckt } = useAufgedeckt();
   if (!aufgedeckt) return null;
   return (
-    <div className="mt-3 border-l-2 border-border pl-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+    <div className="mt-3 border-l-2 border-border pl-3 text-base leading-7 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
       {children}
     </div>
   );
 }
 
-export function AufdeckKnopf({ zeigen, verbergen }: { zeigen: string; verbergen: string }) {
+export function AufdeckKnopf({
+  zeigen = "Antwort zeigen",
+  verbergen = "Antwort verbergen",
+  className,
+}: {
+  zeigen?: string;
+  verbergen?: string;
+  className?: string;
+}) {
   const { aufgedeckt, setAufgedeckt } = useAufgedeckt();
   return (
     <Button
       variant="outline"
       size="sm"
-      className="mt-3"
+      className={className}
       aria-expanded={aufgedeckt}
       onClick={() => setAufgedeckt(!aufgedeckt)}
     >
@@ -145,32 +261,46 @@ export function AufdeckKnopf({ zeigen, verbergen }: { zeigen: string; verbergen:
   );
 }
 
-/** Erst selbst denken, dann aufdecken. */
-export const Denkanstoss = ({ children }: { children: ReactNode }) => (
-  <Ergaenzung art="Denkanstoß" symbol={Lightbulb}>
-    <AufdeckBereich>
-      {children}
-      <AufdeckKnopf zeigen="Auflösung zeigen" verbergen="Auflösung verbergen" />
-    </AufdeckBereich>
-  </Ergaenzung>
-);
-
-/** Aufeinanderfolgende Wiederholungsfragen am Ende eines Abschnitts. */
-export const Fragen = ({ children }: { children: ReactNode }) => (
-  <Ergaenzung art="Wiederholungsfragen" symbol={BookOpenCheck}>
-    <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-      Beantworte jede Frage zuerst selbst, ohne nachzuschauen, und deck erst dann die Lösung auf.
-    </p>
-    <ol className="space-y-6 [counter-reset:frage]">{children}</ol>
-  </Ergaenzung>
-);
-
-export function FrageRahmen({ children }: { children: ReactNode }) {
+/** Erst selbst denken, dann aufdecken: Frage und Knopf in einer Zeile, darunter die Antwort. */
+export function Denkanstoss({ id, children }: { id?: string; children: ReactNode }) {
+  const [frage, ...antwort] = Children.toArray(children);
   return (
-    <li className="[counter-increment:frage]">
-      <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground before:content-['Frage_'_counter(frage)]">
-        <PenLine aria-hidden className="order-first size-3.5" />
-      </p>
+    <Ergaenzung id={id} titel="Denkanstoß">
+      <AufdeckBereich>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b pb-3">
+          <div className="min-w-48 flex-1">{frage}</div>
+          <AufdeckKnopf className="h-10 w-full compact:h-8 compact:w-auto" />
+        </div>
+        {antwort}
+      </AufdeckBereich>
+    </Ergaenzung>
+  );
+}
+
+// Wiederholungsfragen: Im Kapitel stehen sie nicht, sondern auf ihrer eigenen
+// Seite danach (`KapitelSeite`, Teil „fragen“). Jede Frage hat eine
+// Kopfzeile mit Nummer und Art und die rote Linie.
+
+/** Ob gerade die Seite der Wiederholungsfragen gezeigt wird. */
+export const FragenseiteContext = createContext(false);
+
+export function Fragen({ children }: { children: ReactNode }) {
+  const fragenseite = useContext(FragenseiteContext);
+  if (!fragenseite) return null;
+  return (
+    <ol data-fragen className="mt-8 space-y-8 [counter-reset:frage]">
+      {children}
+    </ol>
+  );
+}
+
+export function FrageRahmen({ art, children }: { art: string; children: ReactNode }) {
+  return (
+    <li className="text-sm [counter-increment:frage]">
+      <div className="mb-3 flex items-center gap-2.5 border-b-2 border-red pb-2">
+        <span className="font-mono text-sm font-semibold before:content-[counter(frage)]" />
+        <Badge variant="outline">{art}</Badge>
+      </div>
       {children}
     </li>
   );

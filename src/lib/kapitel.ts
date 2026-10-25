@@ -2,8 +2,15 @@ import type { ComponentType } from "react";
 import type { MDXProps } from "mdx/types";
 import skriptJson from "@/inhalt/skript.json";
 
-export type Gliederungseintrag = { tiefe: number; titel: string; id: string };
-export type Suchabschnitt = { id: string; titel: string; text: string };
+/** Abschnitt (`tiefe` 2, 3 …) oder Ergänzung als Block (`ergaenzung`, `tiefe` 0). */
+export type Gliederungseintrag = {
+  tiefe: number;
+  titel: string;
+  id: string;
+  ergaenzung?: boolean;
+};
+/** Text eines Abschnitts für die Suche, Original und Ergänzungen getrennt. */
+export type Suchabschnitt = { id: string; titel: string; text: string; ergaenzung?: boolean };
 
 export type Kapitel = {
   /** Dateiname ohne Endung, z.B. `01-grundbegriffe`; Teil der Adresse. */
@@ -12,6 +19,8 @@ export type Kapitel = {
   gliederung: Gliederungseintrag[];
   seiten: [number, number] | null;
   suchtext: Suchabschnitt[];
+  /** Zahl der Wiederholungsfragen; mit Fragen folgt dem Kapitel ihre Seite. */
+  fragen: number;
   Inhalt: ComponentType<MDXProps>;
 };
 
@@ -21,6 +30,7 @@ type Modul = {
   gliederung: Gliederungseintrag[];
   seiten: [number, number] | null;
   suchtext: Suchabschnitt[];
+  fragen: number;
 };
 
 // Jedes .mdx in src/inhalt ist ein Kapitel, sortiert nach Dateiname
@@ -35,6 +45,7 @@ export const KAPITEL: Kapitel[] = Object.entries(module)
     gliederung: m.gliederung,
     seiten: m.seiten,
     suchtext: m.suchtext,
+    fragen: m.fragen,
     Inhalt: m.default,
   }));
 
@@ -48,3 +59,20 @@ export type Skript = {
 
 export const SKRIPT: Skript = skriptJson;
 export const ERSTELLT = __ERSTELLT__;
+
+/** Adresse der Seite mit den Wiederholungsfragen: `#/{kapitel}/wiederholungsfragen`. */
+export const FRAGENSEITE = "wiederholungsfragen";
+
+/** „2 Das RC-Glied“ → Nummer „2“ und Titel „Das RC-Glied“; ohne Nummer nur der Titel. */
+export function nummerUndTitel(text: string): { nummer?: string; titel: string } {
+  const m = /^(\d+(?:\.\d+)*)\.?\s+(.+)$/.exec(text);
+  return m ? { nummer: m[1], titel: m[2] } : { titel: text };
+}
+
+/** Eine Seite der Webseite: ein Kapitel oder seine Wiederholungsfragen. */
+export type Seite = { kapitel: Kapitel; fragen: boolean; titel: string };
+
+export const SEITEN: Seite[] = KAPITEL.flatMap((k) => [
+  { kapitel: k, fragen: false, titel: nummerUndTitel(k.titel).titel },
+  ...(k.fragen ? [{ kapitel: k, fragen: true, titel: "Wiederholungsfragen" }] : []),
+]);

@@ -5,7 +5,14 @@ import GithubSlugger from "github-slugger";
 import { toString } from "mdast-util-to-string";
 import { visit, SKIP } from "unist-util-visit";
 import { valueToEstree } from "estree-util-value-to-estree";
-import { BLOECKE, CONTAINER, ERGAENZUNGEN, FRAGENGRUPPE, MARKEN } from "./ergaenzungen.mjs";
+import {
+  BLOECKE,
+  CONTAINER,
+  ERGAENZUNGEN,
+  FRAGENGRUPPE,
+  FRAGENSEITE,
+  MARKEN,
+} from "./ergaenzungen.mjs";
 
 const DIREKTIVEN = new Set(["containerDirective", "leafDirective", "textDirective"]);
 const JSX = new Set([
@@ -132,6 +139,7 @@ function ergaenzung(file, node, name, def) {
   }
   const { label, inhalt } = labelUndInhalt(node);
   const props = { ...attribute };
+  if (node.anker) props.id = node.anker;
   let kinder = inhalt;
   if (def.label === "titel" && label) props.titel = toString(label);
   if (def.label === "frage") {
@@ -154,6 +162,8 @@ function ergaenzung(file, node, name, def) {
   node.data = { hName: def.komponente, hProperties: props };
 }
 
+const verbinden = (woerter) => woerter.join(" ").replace(/\s+/g, " ").trim();
+
 /** Fasst aufeinanderfolgende Fragen zu einem Block zusammen. */
 function fragenGruppieren(parent) {
   if (!parent.children || parent.data?.hName === FRAGENGRUPPE) return;
@@ -170,7 +180,7 @@ function fragenGruppieren(parent) {
 
 /**
  * @param {{ mdx?: boolean }} [optionen] `mdx: true` hängt die Exporte für die
- *   Webseite an (Titel, Gliederung, Seiten, Suchtext).
+ *   Webseite an (Titel, Gliederung, Seiten, Suchtext, Zahl der Fragen).
  */
 export default function remarkSkript(optionen = {}) {
   return (tree, file) => {
@@ -220,14 +230,26 @@ export default function remarkSkript(optionen = {}) {
     };
     pruefen(tree, false, false);
 
-    // 3. Gliederung und Suchtext, bevor Direktiven umgebaut werden.
+    // 3. Gliederung und Suchtext, bevor Direktiven umgebaut werden. Text in
+    //    Ergänzungen sammelt der Suchtext getrennt (die Suche zeigt ihn als
+    //    Ergänzung), die Wiederholungsfragen auf ihrer eigenen Seite.
     const slugger = new GithubSlugger();
     let titel = "";
     const gliederung = [];
     const suchtext = [];
     const seiten = [];
-    let abschnitt = { id: "", titel: "", text: [] };
+    let abschnitt = { id: "", titel: "", text: [], ergaenzung: [] };
     suchtext.push(abschnitt);
+    const fragenText = { id: FRAGENSEITE, titel: "Wiederholungsfragen", text: [], ergaenzung: [] };
+    let fragen = 0;
+    const sammeln = (node, ziel) => {
+      if (DIREKTIVEN.has(node.type) && MARKEN[node.name]) return; // ::seite[3]
+      if (node.type === "text" || node.type === "inlineCode") ziel.push(node.value);
+      else if (node.type === "image" && node.alt) ziel.push(node.alt);
+      const ergaenzt = DIREKTIVEN.has(node.type) && ERGAENZUNGEN[node.name];
+      for (const kind of node.children ?? [])
+        sammeln(kind, ergaenzt && ziel === abschnitt.text ? abschnitt.ergaenzung : ziel);
+    };
     for (const node of tree.children) {
       if (node.type === "heading") {
         const text = toString(node);
@@ -238,18 +260,30 @@ export default function remarkSkript(optionen = {}) {
           titel = text;
         } else {
           gliederung.push({ tiefe: node.depth, titel: text, id });
-          abschnitt = { id, titel: text, text: [] };
+          abschnitt = { id, titel: text, text: [], ergaenzung: [] };
           suchtext.push(abschnitt);
         }
         continue;
       }
       if (node.type === "mdxjsEsm") continue;
       // Wörter einzeln sammeln, damit Blöcke nicht zusammenkleben („KondensatorDer“).
-      visit(node, (k) => {
-        if (k.type === "text" || k.type === "inlineCode") abschnitt.text.push(k.value);
-        else if (k.type === "image" && k.alt) abschnitt.text.push(k.alt);
-      });
+      if (node.type === "containerDirective" && ERGAENZUNGEN[node.name]?.gruppe) {
+        fragen++;
+        sammeln(node, fragenText.ergaenzung);
+        continue;
+      }
+      // Ergänzungen als Block bekommen einen Anker für „Auf dieser Seite“.
+      if (node.type === "containerDirective" && ERGAENZUNGEN[node.name]) {
+        const { label } = labelUndInhalt(node);
+        const art = ERGAENZUNGEN[node.name].titel;
+        const name = ERGAENZUNGEN[node.name].label === "titel" && label ? toString(label) : art;
+        const id = slugger.slug(`ergaenzung-${name}`);
+        node.anker = id;
+        gliederung.push({ tiefe: 0, titel: name, id, ergaenzung: true });
+      }
+      sammeln(node, abschnitt.text);
     }
+    suchtext.push(fragenText);
     visit(tree, "leafDirective", (node) => {
       if (node.name !== "seite") return;
       const nr = toString(node).trim();
@@ -298,17 +332,39 @@ export default function remarkSkript(optionen = {}) {
 
     if (!optionen.mdx) return;
     if (!titel) file.fail("Ein Kapitel beginnt mit genau einer Überschrift #.");
+
+    // 6. Nur für die Webseite: Eine Anmerkung `Wort:anm[…]` hängt am Wort
+    //    davor (oder an der Formel davor). Es wird ihr Knopf und bleibt bei
+    //    „Nur Original“ stehen; der Wortlaut prüft den Baum ohne diesen Schritt.
+    visit(tree, "textDirective", (node, index, parent) => {
+      if (node.data?.hName !== ERGAENZUNGEN.anm.komponente || !parent || !index) return;
+      const davor = parent.children[index - 1];
+      let wort = null;
+      if (davor.type === "text") {
+        const m = /(\S+)$/.exec(davor.value);
+        if (m) {
+          davor.value = davor.value.slice(0, m.index);
+          wort = { type: "text", value: m[1] };
+        }
+      } else if (davor.type === "inlineMath" || davor.type === "inlineCode") {
+        parent.children.splice(index - 1, 1);
+        wort = davor;
+        index--;
+      }
+      if (wort) node.children = [element("AnmWort", [wort]), ...node.children];
+      return index + 1;
+    });
     const exporte = {
       titel,
       gliederung,
       seiten: seiten.length ? [seiten[0], seiten.at(-1)] : null,
       suchtext: suchtext
-        .map((a) => ({
-          id: a.id,
-          titel: a.titel,
-          text: a.text.join(" ").replace(/\s+/g, " ").trim(),
-        }))
-        .filter((a) => a.text || a.titel),
+        .flatMap((a) => [
+          { id: a.id, titel: a.titel, text: verbinden(a.text) },
+          { id: a.id, titel: a.titel, text: verbinden(a.ergaenzung), ergaenzung: true },
+        ])
+        .filter((a) => a.text || (a.titel && !a.ergaenzung && a.id !== FRAGENSEITE)),
+      fragen,
     };
     for (const [name, wert] of Object.entries(exporte)) {
       tree.children.push({
