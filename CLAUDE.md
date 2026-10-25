@@ -77,11 +77,10 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Millimeterpapier wie im Übungsblatt.
 - Kopf (56 px, auf niedrigen Querformat-Bildschirmen `short:` 48 px, dazu der
   sichere Bereich oben): Titel, „Kapitel 2 / 3“ (erst ab `md:`, darunter
-  über der Seite, sonst passt die Zeile nicht) und die Knöpfe „Inhalt“ (nur
-  kompakt), „Auf dieser Seite“ (nicht bei den Wiederholungsfragen, die keine
-  Abschnitte haben) und „Einstellungen“. Keine Tabs „Mit Ergänzungen | Nur
-  Original“ im Kopf, die Ansicht wählt man nur in den Einstellungen
-  (Entscheidung des Nutzers, 2026-10-25). Drei Stufen wie in den Apps (Entscheidung des Nutzers,
+  über der Seite, sonst passt die Zeile nicht), Tabs „Mit Ergänzungen | Nur
+  Original“ und die Knöpfe „Inhalt“ (nur kompakt), „Auf dieser Seite“ (nicht
+  bei den Wiederholungsfragen, die keine Abschnitte haben) und
+  „Einstellungen“. Drei Stufen wie in den Apps (Entscheidung des Nutzers,
   2026-10-25; `useStep()` aus `src/lib/ohmtools/steps.ts` mit denselben
   Abfragen wie `compact:` und `wide:`, breit ab 64rem und 700 px Höhe):
   - breit (`wide:`): drei Spalten in einem Viewport, jede scrollt für sich
@@ -111,7 +110,7 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   `src/lib/ohmtools/motion.ts`, `hereinschieben` in `src/lib/bewegung.ts`,
   `erscheinen` in `src/index.css`): die nächste Seite oder der Tab rechts
   davon kommt von rechts, die vorige von links (Web Animations API, `main`
-  schneidet dabei seitlich ab); die andere Ansicht (Einstellungen) blendet
+  schneidet dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet
   die Seite neu ein; „Auf dieser Seite“ gleitet breit per View Transition
   herein und hinaus, Blatt und Dialog bewegen sich wie in den Apps
   (`ui/sheet.tsx`, `ui/dialog.tsx`), die Seite der Einstellungen (kompakt)

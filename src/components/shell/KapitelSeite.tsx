@@ -89,7 +89,7 @@ export function KapitelSeite({
       ) : (
         <>
           <p className="flex flex-wrap items-center gap-2 text-xs leading-5 text-muted-foreground">
-            {/* Im Kopf erst ab `md:`, darunter passt er dort nicht neben Titel und Knöpfe */}
+            {/* Im Kopf erst ab `md:`, darunter passt er dort nicht neben die Tabs */}
             <span className="md:hidden">
               <KapitelBadge seite={seite} />
             </span>
