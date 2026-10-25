@@ -19,7 +19,7 @@ export function Kapitelbaum({
   gross?: boolean;
 }) {
   const knopf = cn(
-    "flex w-full items-center gap-2.5 rounded-md px-2 text-left text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+    "flex w-full items-center gap-2.5 rounded-md px-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
     gross ? "min-h-11" : "min-h-8",
   );
   return (
@@ -47,7 +47,7 @@ export function Kapitelbaum({
                 <span className="py-1.5">{titel}</span>
               </button>
               {offen && (abschnitte.length > 0 || k.fragen > 0) && (
-                <ul className="mt-0.5 flex flex-col gap-0.5">
+                <ul className="erscheinen mt-0.5 flex flex-col gap-0.5">
                   {abschnitte.map((g) => (
                     <li key={g.id}>
                       <button

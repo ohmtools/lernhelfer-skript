@@ -232,7 +232,7 @@ export function Antwort({ children }: { children: ReactNode }) {
   const { aufgedeckt } = useAufgedeckt();
   if (!aufgedeckt) return null;
   return (
-    <div className="mt-3 border-l-2 border-border pl-3 text-base leading-7 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+    <div className="erscheinen mt-3 border-l-2 border-border pl-3 text-base leading-7 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
       {children}
     </div>
   );

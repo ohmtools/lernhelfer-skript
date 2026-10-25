@@ -30,7 +30,7 @@ export function AufDieserSeite({
               type="button"
               aria-current={aktiv === g.id ? "location" : undefined}
               className={cn(
-                "-ml-px flex w-full items-center gap-2 border-l py-1 text-left leading-5 hover:text-foreground",
+                "-ml-px flex w-full items-center gap-2 border-l py-1 text-left leading-5 transition-colors hover:text-foreground",
                 g.ergaenzung ? "pl-6" : g.tiefe > 2 ? "pl-6" : "pl-3",
                 aktiv === g.id
                   ? "border-foreground font-medium text-foreground"

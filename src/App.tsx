@@ -10,17 +10,27 @@ import { KapitelBadge, KapitelSeite } from "@/components/shell/KapitelSeite";
 import { Suche } from "@/components/shell/Suche";
 import { TabLeiste, type Tab } from "@/components/shell/TabLeiste";
 import { AnsichtContext } from "@/lib/ansicht";
+import { hereinschieben, uebergang, wenigBewegung } from "@/lib/bewegung";
 import { FRAGENSEITE, SEITEN, SKRIPT } from "@/lib/kapitel";
 import { useNavigation, type Ort } from "@/lib/navigation";
 
 // Ein Viewport, die Seite scrollt nie; jede Spalte scrollt für sich
-// (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px.
+// (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px. Jede Spalte ist
+// `relative`: sonst beziehen sich absolut gesetzte Elemente darin (`sr-only`)
+// auf das Dokument, verlängern es, und `scrollIntoView` schiebt den Kopf weg.
 // - `wide:`: links Suche und Kapitel (280 px), Mitte die Seite (höchstens
 //   720 px), rechts „Auf dieser Seite“ (280 px) oder das Panel
 //   „Einstellungen“ (340 px), beide über Knöpfe im Kopf.
 // - darunter eine Spalte und die Leiste „Skript | Inhalt | Einstellungen“.
+// Bewegung (`@/lib/bewegung`): die nächste Seite oder der Tab rechts davon
+// kommt von rechts, die vorige von links; „Mit Ergänzungen | Nur Original“
+// blendet die Seite neu ein; das Panel rechts gleitet herein; ein Sprung
+// innerhalb der Seite scrollt sanft.
 
 type Panel = "seite" | "einstellungen" | null;
+
+/** Die Tabs in der Reihenfolge der Leiste (`TabLeiste`), für die Richtung. */
+const REIHE: Tab[] = ["skript", "inhalt", "einstellungen"];
 
 /** Der Abschnitt, dessen Überschrift zuletzt oben vorbeigescrollt ist. */
 function useAktiverAbschnitt(ids: string[]) {
@@ -50,6 +60,27 @@ function useAktiverAbschnitt(ids: string[]) {
   return aktiv;
 }
 
+/**
+ * Hält den Abschnitt nach einem Sprung oben, solange sich die neue Seite noch
+ * setzt: Zeichenflächen und Graphen messen ihre Breite erst nach dem Einhängen
+ * und werden dann kleiner. Höchstens eine Sekunde, und nur bis der Nutzer
+ * selbst scrollt.
+ */
+function festhalten(el: Element, spalte: HTMLElement) {
+  const ausrichten = () => el.scrollIntoView({ block: "start" });
+  const beobachter = new ResizeObserver(ausrichten);
+  for (const kind of spalte.children) beobachter.observe(kind);
+  const ende = () => {
+    beobachter.disconnect();
+    clearTimeout(uhr);
+    for (const e of EINGABEN) spalte.removeEventListener(e, ende);
+  };
+  const uhr = setTimeout(ende, 1000);
+  for (const e of EINGABEN) spalte.addEventListener(e, ende, { passive: true });
+  return ende;
+}
+const EINGABEN = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+
 /** Breit genug für drei Spalten mit „Auf dieser Seite“? Nur beim Start gefragt. */
 function startPanel(): Panel {
   try {
@@ -66,6 +97,7 @@ export function App() {
   const [mitErgaenzungen, setMitErgaenzungen] = useState(true);
   const [ziel, setZiel] = useState<Ort | null>(ort.abschnitt ? ort : null);
   const erledigt = useRef<Ort | null>(null);
+  const sanft = useRef(false);
   const mitte = useRef<HTMLElement>(null);
   const suchfeld = useRef<HTMLInputElement>(null);
   const fragen = ort.abschnitt === FRAGENSEITE;
@@ -78,6 +110,9 @@ export function App() {
   const aktiv = useAktiverAbschnitt(idsStabil);
 
   const hingehen = (neu: Ort) => {
+    // Auf derselben Seite und schon sichtbar: dorthin scrollen statt springen.
+    sanft.current =
+      tab === "skript" && neu.kapitel === ort.kapitel && (neu.abschnitt === FRAGENSEITE) === fragen;
     gehe(neu);
     setTab("skript");
     setZiel(neu);
@@ -91,19 +126,35 @@ export function App() {
       ziel.abschnitt && ziel.abschnitt !== FRAGENSEITE
         ? document.getElementById(ziel.abschnitt)
         : null;
-    if (el) el.scrollIntoView({ block: "start" });
-    else mitte.current?.scrollTo({ top: 0 });
+    const behavior = sanft.current && !wenigBewegung() ? "smooth" : "auto";
+    if (el) el.scrollIntoView({ block: "start", behavior });
+    else mitte.current?.scrollTo({ top: 0, behavior });
+    if (el && behavior === "auto" && mitte.current) return festhalten(el, mitte.current);
   }, [ziel, tab]);
+
+  // Eine andere Seite, ein anderer Tab oder die andere Ansicht kommt herein.
+  const index = seite ? SEITEN.indexOf(seite) : 0;
+  const zuletzt = useRef({ index, tab, mitErgaenzungen });
+  useLayoutEffect(() => {
+    const alt = zuletzt.current;
+    zuletzt.current = { index, tab, mitErgaenzungen };
+    const tabs = REIHE.indexOf(tab) - REIHE.indexOf(alt.tab);
+    const richtung = Math.sign(tabs || index - alt.index) as -1 | 0 | 1;
+    if (!richtung && alt.mitErgaenzungen === mitErgaenzungen) return;
+    const sichtbar = [...(mitte.current?.children ?? [])].find((k) => k.getClientRects().length);
+    if (sichtbar) hereinschieben(sichtbar, richtung, mitte.current);
+  }, [index, tab, mitErgaenzungen]);
 
   if (!seite || !kapitel)
     return <p className="p-6 text-sm">Dieses Skript hat noch keine Kapitel.</p>;
 
-  const umschalten = (p: Panel) => setPanel((alt) => (alt === p ? null : p));
+  const umschalten = (p: Panel) =>
+    uebergang("panel", () => setPanel((alt) => (alt === p ? null : p)));
   const einstellungen = (schliessen?: () => void) => (
     <Einstellungen
       mitErgaenzungen={mitErgaenzungen}
       onChange={setMitErgaenzungen}
-      onSchliessen={schliessen}
+      onSchliessen={schliessen && (() => uebergang("panel", schliessen))}
     />
   );
 
@@ -158,13 +209,13 @@ export function App() {
         </header>
 
         <div className="flex min-h-0 flex-1">
-          <aside className="hidden w-70 shrink-0 flex-col overflow-y-auto border-r wide:flex">
+          <aside className="relative hidden w-70 shrink-0 flex-col overflow-y-auto border-r wide:flex">
             <Suche onGehe={hingehen} spalte>
               <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} />
             </Suche>
           </aside>
 
-          <main ref={mitte} className="min-w-0 flex-1 overflow-y-auto">
+          <main ref={mitte} className="relative min-w-0 flex-1 overflow-y-auto">
             <div className={tab === "skript" ? undefined : "hidden wide:block"}>
               <KapitelSeite seite={seite} onGehe={hingehen} />
             </div>
@@ -179,14 +230,18 @@ export function App() {
           </main>
 
           {panel === "seite" && !seite.fragen && (
-            <aside className="hidden w-70 shrink-0 overflow-y-auto px-6 py-10 wide:block">
+            <aside
+              data-vt="panel"
+              className="relative hidden w-70 shrink-0 overflow-y-auto px-6 py-10 wide:block"
+            >
               <AufDieserSeite kapitel={kapitel} aktiv={aktiv} onGehe={hingehen} />
             </aside>
           )}
           {panel === "einstellungen" && (
             <aside
               aria-label="Einstellungen"
-              className="hidden w-85 shrink-0 overflow-y-auto border-l wide:block"
+              data-vt="panel"
+              className="relative hidden w-85 shrink-0 overflow-y-auto border-l wide:block"
             >
               {einstellungen(() => setPanel(null))}
             </aside>

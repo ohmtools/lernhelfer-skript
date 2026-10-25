@@ -64,6 +64,20 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   `Fragen` (`data-fragen`). Suche über alle Kapitel (minisearch, Export
   `suchtext`: Original und Ergänzungen getrennt, die Fragen als eigener
   Abschnitt).
+- Bewegung wie in zeiteisen, ohne Bibliothek (`src/lib/bewegung.ts`, CSS am
+  Ende von `src/index.css`): die nächste Seite oder der Tab rechts davon
+  kommt von rechts, die vorige von links (Web Animations API, `main` schneidet
+  dabei seitlich ab); „Mit Ergänzungen | Nur Original“ blendet die Seite neu
+  ein; das Panel rechts gleitet per View Transition herein und hinaus; ein
+  Sprung innerhalb der Seite scrollt sanft; Aufgedecktes (Antworten, Urteile,
+  Rückmeldungen) und die Abschnitte im Kapitelbaum erscheinen mit
+  `erscheinen`. Bei `prefers-reduced-motion` bewegt sich nichts.
+- Sprung zu einem Abschnitt einer anderen Seite: `festhalten` in `App.tsx`
+  richtet ihn höchstens eine Sekunde lang neu aus, bis sich die Seite gesetzt
+  hat (Zeichenflächen und Graphen werden nach dem Einhängen kleiner), und
+  hört auf, sobald der Nutzer scrollt. Jede scrollende Spalte ist `relative`,
+  sonst verlängern absolut gesetzte Elemente (`sr-only`) das Dokument und
+  `scrollIntoView` schiebt den Kopf weg.
 - Abweichungen von DESIGN.md, weil die Seite eine Datei ist: Das
   Dunkelmodus-Skript steht inline in `index.html` (DESIGN.md will
   `public/dark.js` wegen der CSP, die es im Artefakt nicht gibt). Die

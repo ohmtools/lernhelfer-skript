@@ -138,7 +138,7 @@ export function Suche({
               <li key={t.id} className="border-b last:border-b-0">
                 <button
                   type="button"
-                  className="w-full rounded-md px-2 py-2.5 text-left text-sm leading-5 text-muted-foreground hover:bg-accent/60"
+                  className="w-full rounded-md px-2 py-2.5 text-left text-sm leading-5 text-muted-foreground transition-colors hover:bg-accent/60"
                   onClick={() => {
                     onGehe({ kapitel: t.kapitel, abschnitt: t.abschnitt || undefined });
                     setAnfrage("");

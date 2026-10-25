@@ -67,11 +67,11 @@ const istErklaerung = (k: ReactNode) => isValidElement(k) && k.type === Optionse
 
 function Urteil({ richtig }: { richtig: boolean }) {
   return richtig ? (
-    <Badge variant="outline">
+    <Badge variant="outline" className="erscheinen">
       <Check aria-hidden /> richtig
     </Badge>
   ) : (
-    <Badge variant="outline" className="border-destructive/30 text-destructive">
+    <Badge variant="outline" className="erscheinen border-destructive/30 text-destructive">
       <X aria-hidden /> falsch
     </Badge>
   );
@@ -128,7 +128,7 @@ export function Optionen({ children }: { children: ReactNode }) {
           {urteil && <Urteil richtig={richtige.has(i)} />}
         </div>
         {urteil && erklaerung.length > 0 && (
-          <div className="mt-1.5 ml-6.5 text-sm leading-5 text-muted-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
+          <div className="erscheinen mt-1.5 ml-6.5 text-sm leading-5 text-muted-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
             {erklaerung}
           </div>
         )}
@@ -161,7 +161,7 @@ export function Optionen({ children }: { children: ReactNode }) {
         </div>
       )}
       {geprueft && mehrfach && (
-        <p role="status" className="mt-2 text-sm">
+        <p role="status" className="erscheinen mt-2 text-sm">
           {alleRichtig ? "Richtig." : "Noch nicht ganz: Die richtigen Antworten sind markiert."}
         </p>
       )}
@@ -179,7 +179,7 @@ function Auswahlerklaerung({ children }: { children: ReactNode }) {
   const { aufgedeckt } = useAufgedeckt();
   if (!aufgedeckt) return null;
   return (
-    <div className="mt-3 text-sm leading-5 text-muted-foreground [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
+    <div className="erscheinen mt-3 text-sm leading-5 text-muted-foreground [&_p]:my-1 [&_p]:text-sm [&_p]:leading-5">
       {children}
     </div>
   );
@@ -266,8 +266,8 @@ function Rechenfeld({
           role="status"
           className={
             geprueft
-              ? "mt-2.5 flex items-center gap-1.5 text-sm"
-              : "mt-2.5 flex items-center gap-1.5 text-sm text-destructive"
+              ? "erscheinen mt-2.5 flex items-center gap-1.5 text-sm"
+              : "erscheinen mt-2.5 flex items-center gap-1.5 text-sm text-destructive"
           }
         >
           {geprueft ? (
