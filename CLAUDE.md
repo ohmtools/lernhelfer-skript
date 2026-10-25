@@ -52,8 +52,9 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
   Millimeterpapier wie im Übungsblatt.
 - Kopf (56 px): Titel, „Kapitel 2 / 3“, Tabs „Mit Ergänzungen | Nur
-  Original“ und die Knöpfe „Auf dieser Seite“ und „Einstellungen“. `wide:`:
-  drei Spalten in einem Viewport, jede scrollt für sich (Suche und Kapitel
+  Original“ und die Knöpfe „Auf dieser Seite“ (nicht bei den
+  Wiederholungsfragen, die keine Abschnitte haben) und „Einstellungen“.
+  `wide:`: drei Spalten in einem Viewport, jede scrollt für sich (Suche und Kapitel
   280 px, Seite höchstens 720 px, rechts „Auf dieser Seite“ 280 px oder das
   Panel „Einstellungen“ 340 px; „Auf dieser Seite“ ist beim Start erst ab
   80rem offen). Darunter eine Spalte und die Leiste „Skript | Inhalt |

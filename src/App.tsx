@@ -173,16 +173,19 @@ export function App() {
             <AnsichtTabs mitErgaenzungen={mitErgaenzungen} onChange={setMitErgaenzungen} />
           </span>
           <div className="hidden gap-2 wide:flex">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Auf dieser Seite"
-              aria-pressed={panel === "seite"}
-              className={cn(panel === "seite" && "bg-accent")}
-              onClick={() => umschalten("seite")}
-            >
-              <List />
-            </Button>
+            {/* Die Wiederholungsfragen haben keine Abschnitte */}
+            {!seite.fragen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Auf dieser Seite"
+                aria-pressed={panel === "seite"}
+                className={cn(panel === "seite" && "bg-accent")}
+                onClick={() => umschalten("seite")}
+              >
+                <List />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
