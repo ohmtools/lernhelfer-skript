@@ -6,7 +6,9 @@ zeiteisen. Nicht von Hand ändern, außer hier steht es.
 - `button`, `checkbox`, `input`, `label`, `popover`, `separator`, `tabs`,
   `textarea`, `toggle`, `toggle-group` sind aus zeiteisen kopiert (dort von
   der shadcn-CLI erzeugt, mit den Handänderungen aus dessen `NOTES.md`, u.a.
-  der gleitende Indikator von `TabsList` und das Minus der `Checkbox`).
+  das Popover als Glas (`popup-glass` statt `bg-popover` und Schatten, Rand
+  `ring-foreground/30`, 200 ms), der gleitende Indikator von `TabsList`
+  (560 ms) und das Minus der `Checkbox`).
 - `slider`, `radio-group`, `badge` und `table` sind aus dem
   shadcn-Repository (`apps/v4/registry/bases/base/ui/*.tsx`), jede
   `cn-*`-Klasse durch ihre `@apply`-Liste aus
