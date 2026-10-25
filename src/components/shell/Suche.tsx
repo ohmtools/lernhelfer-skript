@@ -1,6 +1,7 @@
-import { useMemo, useState, type ReactNode, type Ref } from "react";
+import { useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import MiniSearch from "minisearch";
 import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAnsicht } from "@/lib/ansicht";
 import { FRAGENSEITE, KAPITEL, nummerUndTitel } from "@/lib/kapitel";
@@ -96,6 +97,7 @@ export function Suche({
   const suche = useMemo(() => index(), []);
   const { mitErgaenzungen } = useAnsicht();
   const [anfrage, setAnfrage] = useState("");
+  const feld = useRef<HTMLDivElement>(null);
   const treffer =
     anfrage.trim().length >= 2
       ? suche
@@ -105,7 +107,7 @@ export function Suche({
   return (
     <div>
       <div className={spalte ? "border-b p-4" : undefined}>
-        <div className="relative">
+        <div ref={feld} className="relative">
           <Search
             aria-hidden
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
@@ -127,7 +129,21 @@ export function Suche({
       ) : (
         <ul className={spalte ? "px-2 py-2" : "mt-2"} aria-label="Suchergebnisse">
           {treffer.length === 0 && (
-            <li className="py-3 text-sm text-muted-foreground">Nichts gefunden.</li>
+            <li className="flex flex-col items-start gap-3 px-2 py-3 text-sm text-muted-foreground">
+              {mitErgaenzungen
+                ? "Nichts gefunden."
+                : "Nichts gefunden. Bei „Nur Original“ wird nur der Originaltext durchsucht."}
+              <Button
+                variant="outline"
+                className="h-10 compact:h-9"
+                onClick={() => {
+                  setAnfrage("");
+                  feld.current?.querySelector("input")?.focus();
+                }}
+              >
+                Suche leeren
+              </Button>
+            </li>
           )}
           {treffer.map((t) => {
             const fragen = t.abschnitt === FRAGENSEITE;

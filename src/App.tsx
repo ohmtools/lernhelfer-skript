@@ -13,11 +13,15 @@ import { AnsichtContext } from "@/lib/ansicht";
 import { hereinschieben, uebergang, wenigBewegung } from "@/lib/bewegung";
 import { FRAGENSEITE, SEITEN, SKRIPT } from "@/lib/kapitel";
 import { useNavigation, type Ort } from "@/lib/navigation";
+import { RAND_X } from "@/lib/rand";
 
 // Ein Viewport, die Seite scrollt nie; jede Spalte scrollt für sich
-// (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px. Jede Spalte ist
-// `relative`: sonst beziehen sich absolut gesetzte Elemente darin (`sr-only`)
-// auf das Dokument, verlängern es, und `scrollIntoView` schiebt den Kopf weg.
+// (DESIGN.md, „App shell“ und „Reading pages“). Kopf 56 px, auf niedrigen
+// Querformat-Bildschirmen (`short:`) 48 px, dazu der sichere Bereich oben;
+// seitlich polstern Kopf, Leiste und Inhalt selbst (`RAND_X`). Die Wurzel
+// setzt `text-sm`, die Seite selbst `text-base`. Jede Spalte ist `relative`:
+// sonst beziehen sich absolut gesetzte Elemente darin (`sr-only`) auf das
+// Dokument, verlängern es, und `scrollIntoView` schiebt den Kopf weg.
 // - `wide:`: links Suche und Kapitel (280 px), Mitte die Seite (höchstens
 //   720 px), rechts „Auf dieser Seite“ (280 px) oder das Panel
 //   „Einstellungen“ (340 px), beide über Knöpfe im Kopf.
@@ -160,8 +164,13 @@ export function App() {
 
   return (
     <AnsichtContext.Provider value={{ mitErgaenzungen }}>
-      <div className="flex h-dvh flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b pt-[env(safe-area-inset-top)] pr-2 pl-4 wide:gap-4 wide:px-6">
+      <div className="flex h-dvh flex-col text-sm">
+        <header
+          className={cn(
+            "flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b pt-[env(safe-area-inset-top)] short:h-[calc(3rem+env(safe-area-inset-top))] wide:gap-4",
+            RAND_X,
+          )}
+        >
           <h1 className="min-w-0 flex-1 text-base leading-5 font-semibold compact:flex-none">
             {SKRIPT.titel}
           </h1>
@@ -220,10 +229,14 @@ export function App() {
 
           <main ref={mitte} className="relative min-w-0 flex-1 overflow-y-auto">
             <div className={tab === "skript" ? undefined : "hidden wide:block"}>
-              <KapitelSeite seite={seite} onGehe={hingehen} />
+              <KapitelSeite
+                seite={seite}
+                onGehe={hingehen}
+                onErgaenzungenZeigen={() => setMitErgaenzungen(true)}
+              />
             </div>
             {tab === "inhalt" && (
-              <section className="p-4 wide:hidden" aria-label="Inhalt">
+              <section className={cn("py-4 compact:py-6 wide:hidden", RAND_X)} aria-label="Inhalt">
                 <Suche onGehe={hingehen} feldRef={suchfeld}>
                   <Kapitelbaum ort={ort} aktiv={aktiv} onGehe={hingehen} gross />
                 </Suche>

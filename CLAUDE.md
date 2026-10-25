@@ -51,7 +51,8 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Kurve eines Graphen in `--kurve` (chart-3 hell, chart-2 dunkel), weitere
   in anderer Farbe und Strichart, Namen an der Kurve statt einer Legende,
   Millimeterpapier wie im Übungsblatt.
-- Kopf (56 px): Titel, „Kapitel 2 / 3“, Tabs „Mit Ergänzungen | Nur
+- Kopf (56 px, auf niedrigen Querformat-Bildschirmen `short:` 48 px, dazu der
+  sichere Bereich oben): Titel, „Kapitel 2 / 3“, Tabs „Mit Ergänzungen | Nur
   Original“ und die Knöpfe „Auf dieser Seite“ (nicht bei den
   Wiederholungsfragen, die keine Abschnitte haben) und „Einstellungen“.
   `wide:`: drei Spalten in einem Viewport, jede scrollt für sich (Suche und Kapitel
@@ -86,7 +87,7 @@ Tokens. Vor jeder sichtbaren Änderung DESIGN.md lesen; eine Regel, die sich
   Oberfläche ist nur Deutsch, weil die Skripte deutsch sind; kein Logo und
   keine Version (die Seite ist ein Dokument, keine App).
 - Prüfung: `npx --yes github:ohmtools/design check src/index.css components.json src/components/ui/*.tsx src/components/shell/*.tsx src/primitiven/*.tsx` (läuft in der CI).
-- Sichtbare Änderungen bei 360, 400 und 1440 px, hell und dunkel prüfen
+- Sichtbare Änderungen bei 360, 400, 844 × 390 und 1440 px, hell und dunkel prüfen
   (Playwright mit Chromium, `dist/index.html` über `file://`).
 
 ## Aufbau

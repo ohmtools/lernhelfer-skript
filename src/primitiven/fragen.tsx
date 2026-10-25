@@ -17,7 +17,8 @@ import {
 
 // Die drei Arten der Wiederholungsfragen (DESIGN.md, „Questions page“):
 // Erklären (eigene Antwort, dann aufdecken), Auswahl (Rückmeldung an den
-// Optionen) und Rechnen (Zahl prüfen).
+// Optionen) und Rechnen (Zahl prüfen). Knöpfe am Handy 40 px, ab `compact:`
+// 36 px (DESIGN.md, „Buttons“).
 
 /** Freie Frage: eigene Antwort (optional), dann die Lösung aufdecken. */
 export function Frage({ children }: { children: ReactNode }) {
@@ -155,7 +156,11 @@ export function Optionen({ children }: { children: ReactNode }) {
       {mehrfach && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <span className="text-sm text-muted-foreground">Mehrere Antworten sind richtig.</span>
-          <Button disabled={!gewaehlt.size} onClick={() => setAufgedeckt(true)}>
+          <Button
+            className="h-10 compact:h-9"
+            disabled={!gewaehlt.size}
+            onClick={() => setAufgedeckt(true)}
+          >
             Prüfen
           </Button>
         </div>
@@ -252,11 +257,11 @@ function Rechenfeld({
           className="w-35 font-mono"
         />
         {einheit && <span className="text-sm">{einheit}</span>}
-        <Button className="ml-2" disabled={!eingabe.trim()} onClick={pruefen}>
+        <Button className="ml-2 h-10 compact:h-9" disabled={!eingabe.trim()} onClick={pruefen}>
           Prüfen
         </Button>
         {!aufgedeckt && geprueft === false && (
-          <Button variant="ghost" onClick={() => setAufgedeckt(true)}>
+          <Button variant="ghost" className="h-10 compact:h-9" onClick={() => setAufgedeckt(true)}>
             Lösung zeigen
           </Button>
         )}

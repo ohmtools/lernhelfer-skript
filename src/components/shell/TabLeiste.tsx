@@ -1,4 +1,6 @@
+import { cn } from "cn";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RAND_X } from "@/lib/rand";
 
 export type Tab = "skript" | "inhalt" | "einstellungen";
 
@@ -13,7 +15,12 @@ const istTab = (wert: unknown): wert is Tab => TABS.some((t) => t.tab === wert);
 /** Unter `wide:` die Leiste unten, in Reichweite des Daumens: „Skript | Inhalt | Einstellungen“. */
 export function TabLeiste({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
   return (
-    <div className="shrink-0 border-t bg-background px-4 pt-2 pr-[max(1rem,env(safe-area-inset-right))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] wide:hidden">
+    <div
+      className={cn(
+        "shrink-0 border-t bg-background pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] wide:hidden",
+        RAND_X,
+      )}
+    >
       <Tabs value={tab} onValueChange={(wert: unknown) => istTab(wert) && onChange(wert)}>
         <TabsList aria-label="Ansichten" className="h-10! w-full">
           {TABS.map(({ tab: t, label }) => (

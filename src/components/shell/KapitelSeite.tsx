@@ -29,7 +29,16 @@ export function KapitelBadge({ seite }: { seite: Seite }) {
  * Wiederholungsfragen. Darüber eine Zeile zum Original, am Ende „Zurück“
  * und „Weiter“ zu den Nachbarseiten.
  */
-export function KapitelSeite({ seite, onGehe }: { seite: Seite; onGehe: (ort: Ort) => void }) {
+export function KapitelSeite({
+  seite,
+  onGehe,
+  onErgaenzungenZeigen,
+}: {
+  seite: Seite;
+  onGehe: (ort: Ort) => void;
+  /** „Nur Original“ verlassen, damit die Wiederholungsfragen erscheinen. */
+  onErgaenzungenZeigen: () => void;
+}) {
   const i = SEITEN.indexOf(seite);
   const zurueck = SEITEN[i - 1];
   const weiter = SEITEN[i + 1];
@@ -38,10 +47,12 @@ export function KapitelSeite({ seite, onGehe }: { seite: Seite; onGehe: (ort: Or
   const nummer = nummerUndTitel(kapitel.titel);
   const { mitErgaenzungen } = useAnsicht();
   return (
-    <article className="w-full max-w-180 px-4 pt-5 pb-10 compact:px-14 compact:pt-10 compact:pb-18">
+    // `text-base`: der Inhalt beginnt bei 16 px, auch abgesetzte Formeln (die
+    // Wurzel der App setzt `text-sm`). Seitlich mindestens der sichere Bereich.
+    <article className="w-full max-w-180 pt-5 pr-[max(1rem,env(safe-area-inset-right))] pb-10 pl-[max(1rem,env(safe-area-inset-left))] text-base compact:pt-10 compact:pr-[max(3.5rem,env(safe-area-inset-right))] compact:pb-18 compact:pl-[max(3.5rem,env(safe-area-inset-left))]">
       {seite.fragen ? (
         <>
-          <p className="flex flex-wrap items-center gap-2.5 text-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-2.5 text-xs leading-5 text-muted-foreground">
             <ErgaenzungBadge />
             <span>
               Zu Kapitel {nummer.nummer && <span className="font-mono">{nummer.nummer}</span>}
@@ -63,14 +74,19 @@ export function KapitelSeite({ seite, onGehe }: { seite: Seite; onGehe: (ort: Or
               </FragenseiteContext.Provider>
             </div>
           ) : (
-            <p className="mt-8 text-sm text-muted-foreground">
-              Die Fragen sind Ergänzungen. Unter „Mit Ergänzungen“ stehen sie hier.
-            </p>
+            <div className="mt-8 flex flex-col items-start gap-3">
+              <p className="text-sm text-muted-foreground">
+                Die Fragen sind Ergänzungen und stehen nur in der Ansicht „Mit Ergänzungen“.
+              </p>
+              <Button variant="outline" className="h-10 compact:h-9" onClick={onErgaenzungenZeigen}>
+                Ergänzungen zeigen
+              </Button>
+            </div>
           )}
         </>
       ) : (
         <>
-          <p className="flex flex-wrap items-center gap-2 text-xs leading-5 text-muted-foreground compact:text-sm">
+          <p className="flex flex-wrap items-center gap-2 text-xs leading-5 text-muted-foreground">
             <span className="compact:hidden">
               <KapitelBadge seite={seite} />
             </span>
@@ -98,7 +114,11 @@ export function KapitelSeite({ seite, onGehe }: { seite: Seite; onGehe: (ort: Or
           className="mt-12 flex flex-wrap justify-between gap-3 border-t pt-6"
         >
           {zurueck ? (
-            <Button variant="outline" onClick={() => onGehe(ortVon(zurueck))}>
+            <Button
+              variant="outline"
+              className="h-10 compact:h-9"
+              onClick={() => onGehe(ortVon(zurueck))}
+            >
               <ChevronLeft aria-hidden />
               <span className="sr-only">Zurück: </span>
               {zurueck.titel}
@@ -107,7 +127,7 @@ export function KapitelSeite({ seite, onGehe }: { seite: Seite; onGehe: (ort: Or
             <span />
           )}
           {weiter && (
-            <Button className="ml-auto" onClick={() => onGehe(ortVon(weiter))}>
+            <Button className="ml-auto h-10 compact:h-9" onClick={() => onGehe(ortVon(weiter))}>
               <span className="sr-only">Weiter: </span>
               {weiter.titel}
               <ChevronRight aria-hidden />

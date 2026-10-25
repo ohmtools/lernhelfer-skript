@@ -1,7 +1,9 @@
 import { ExternalLink, X } from "lucide-react";
+import { cn } from "cn";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ERSTELLT, SKRIPT } from "@/lib/kapitel";
+import { RAND_X } from "@/lib/rand";
 
 const VORLAGE = "https://github.com/ohmtools/lernhelfer-skript";
 
@@ -52,7 +54,7 @@ export function Einstellungen({
           </Button>
         </div>
       )}
-      <section className="border-b p-4 compact:p-6">
+      <section className={cn("border-b py-4 compact:py-6", RAND_X)}>
         <h3 id="einstellungen-ansicht" className="font-medium">
           Ansicht
         </h3>
@@ -73,11 +75,11 @@ export function Einstellungen({
           ))}
         </RadioGroup>
       </section>
-      <section className="border-b p-4 compact:p-6">
+      <section className={cn("border-b py-4 compact:py-6", RAND_X)}>
         <h3 className="font-medium">Darstellung</h3>
         <p className="mt-2 text-muted-foreground">Hell oder dunkel folgt dem Gerät.</p>
       </section>
-      <section className="p-4 compact:p-6">
+      <section className={cn("py-4 compact:py-6", RAND_X)}>
         <h3 className="font-medium">Über dieses Skript</h3>
         <p className="mt-1 font-medium">{SKRIPT.titel}</p>
         <table className="mt-2 w-full border-collapse">
