@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode, type Ref } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import MiniSearch from "minisearch";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -84,12 +84,10 @@ function Ausschnitt({ text, begriffe }: { text: string; begriffe: string[] }) {
  */
 export function Suche({
   onGehe,
-  feldRef,
   spalte = false,
   children,
 }: {
   onGehe: (ort: Ort) => void;
-  feldRef?: Ref<HTMLInputElement>;
   /** In der linken Spalte: Suchfeld in einem eigenen Abschnitt mit Linie darunter. */
   spalte?: boolean;
   children?: ReactNode;
@@ -113,7 +111,6 @@ export function Suche({
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
           />
           <Input
-            ref={feldRef}
             type="search"
             enterKeyHint="search"
             aria-label="Im Skript suchen"
