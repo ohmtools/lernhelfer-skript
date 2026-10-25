@@ -69,7 +69,7 @@ export function hereinschieben(
       { opacity: 0, transform: `translateX(${richtung * 32}px)` },
       { opacity: 1, transform: "none" },
     ],
-    { duration: 280, easing: KURVE, fill: "backwards" },
+    { duration: 560, easing: KURVE, fill: "backwards" },
   );
   // Nur die letzte Animation im Rahmen gibt ihn wieder frei.
   if (rahmen)

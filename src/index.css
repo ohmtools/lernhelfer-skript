@@ -151,7 +151,7 @@
   --foreground: #fafafa;
   --card: #0a0a0a;
   --card-foreground: #fafafa;
-  --popover: #0a0a0a;
+  --popover: #262626;
   --popover-foreground: #fafafa;
   --primary: #fafafa;
   --primary-foreground: #0a0a0a;
@@ -210,6 +210,22 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Floating surfaces (popovers, menus, dialogs, sheets, drawers, toasts):
+   frosted glass, `popover` at 72 % over a blurred backdrop. Lines, fields
+   and hovers inside are tints of the foreground, so they show on the glass
+   in both modes. The edge is the component's: a ring of `foreground` at
+   30 %, or a border of it on sheets and drawers. */
+@utility popup-glass {
+  background-color: color-mix(in oklab, var(--popover) 72%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  --border: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --input: color-mix(in oklab, var(--foreground) 15%, transparent);
+  --muted: color-mix(in oklab, var(--foreground) 6%, transparent);
+  --accent: color-mix(in oklab, var(--foreground) 8%, transparent);
+  @apply shadow-xl shadow-black/15 dark:shadow-black/60;
 }
 
 /* Reduced motion: no movement anywhere, the app's own or shadcn's; state
@@ -308,9 +324,9 @@
   color: var(--muted-foreground);
 }
 
-/* Bewegung (`src/lib/bewegung.ts`, DESIGN.md „Motion“): eine Kurve,
-   280 ms herein, 200 ms hinaus. Bei `prefers-reduced-motion` hält die Regel
-   oben alles an. */
+/* Bewegung (`src/lib/bewegung.ts`, DESIGN.md „Motion“): eine Kurve, mit
+   halber Geschwindigkeit 560 ms herein, 400 ms hinaus. Bei
+   `prefers-reduced-motion` hält die Regel oben alles an. */
 
 /* Was neu erscheint (eine aufgedeckte Antwort, das Urteil zu einer Option,
    die Rückmeldung beim Rechnen), blendet ein und wächst ein wenig. */
@@ -321,7 +337,7 @@
   }
 }
 @utility erscheinen {
-  animation: erscheinen 280ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: erscheinen 560ms cubic-bezier(0.2, 0, 0, 1) backwards;
   transform-origin: 50% 0;
 }
 
@@ -343,7 +359,7 @@
 ::view-transition-group(*),
 ::view-transition-old(*),
 ::view-transition-new(*) {
-  animation-duration: 280ms;
+  animation-duration: 560ms;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 html[data-transition="panel"] [data-vt="panel"] {
@@ -360,5 +376,5 @@ html[data-transition="panel"]::view-transition-new(panel):only-child {
 }
 html[data-transition="panel"]::view-transition-old(panel):only-child {
   animation-name: vt-nach-rechts;
-  animation-duration: 200ms;
+  animation-duration: 400ms;
 }
