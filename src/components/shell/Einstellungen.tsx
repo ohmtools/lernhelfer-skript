@@ -12,9 +12,7 @@ import { ERSTELLT, SKRIPT } from "@/lib/kapitel";
 // Dialog `SettingsDialog`, kompakt die Seite `SettingsPage` an Stelle der
 // Ansicht (`EinstellungenSeite`), am Handy im Tab „Einstellungen“ dieselbe
 // Liste ohne Pfeil zurück, denn sie ist die Wurzel des Tabs
-// (`EinstellungenTab`). Die Ansicht wählt man breit und kompakt mit den Tabs
-// im Kopf (`AnsichtTabs`), am Handy, wo der Kopf keinen Platz für sie hat,
-// im Abschnitt „Ansicht“ des Tabs; so steht sie nirgends doppelt.
+// (`EinstellungenTab`). Zwei Abschnitte, überall dieselben.
 
 const VORLAGE = "https://github.com/ohmtools/lernhelfer-skript";
 
@@ -29,17 +27,8 @@ const ANSICHTEN = [
 
 type AnsichtProps = { mitErgaenzungen: boolean; onChange: (mit: boolean) => void };
 
-const UEBER: SettingsSection = {
-  key: "ueber",
-  icon: Info,
-  label: "Über dieses Skript",
-  content: <Ueber />,
-};
-
-/** Am Handy kommt die Ansicht dazu, die sonst im Kopf steht. */
-function abschnitte(ansicht?: AnsichtProps): SettingsSection[] {
-  if (!ansicht) return [UEBER];
-  const { mitErgaenzungen, onChange } = ansicht;
+/** Die Abschnitte, in Dialog, Seite und Tab dieselben. */
+function abschnitte({ mitErgaenzungen, onChange }: AnsichtProps): SettingsSection[] {
   return [
     {
       key: "ansicht",
@@ -48,7 +37,7 @@ function abschnitte(ansicht?: AnsichtProps): SettingsSection[] {
       value: mitErgaenzungen ? "Mit Ergänzungen" : "Nur Original",
       content: <Ansicht mitErgaenzungen={mitErgaenzungen} onChange={onChange} />,
     },
-    UEBER,
+    { key: "ueber", icon: Info, label: "Über dieses Skript", content: <Ueber /> },
   ];
 }
 
@@ -56,17 +45,15 @@ function abschnitte(ansicht?: AnsichtProps): SettingsSection[] {
 export function EinstellungenDialog({
   offen,
   onSchliessen,
-}: {
-  offen: boolean;
-  onSchliessen: () => void;
-}) {
+  ...ansicht
+}: AnsichtProps & { offen: boolean; onSchliessen: () => void }) {
   return (
     <SettingsDialog
       open={offen}
       onClose={onSchliessen}
       title="Einstellungen"
       closeLabel="Einstellungen schließen"
-      sections={abschnitte()}
+      sections={abschnitte(ansicht)}
     />
   );
 }
@@ -77,14 +64,17 @@ export function EinstellungenDialog({
  * der Liste schließt die Einstellungen. Wie die Gruppe `Area` des Designs,
  * die das Skript nicht benutzt, weil es kein `AppShell` hat.
  */
-export function EinstellungenSeite({ onSchliessen }: { onSchliessen: () => void }) {
+export function EinstellungenSeite({
+  onSchliessen,
+  ...ansicht
+}: AnsichtProps & { onSchliessen: () => void }) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <SettingsPage
         onClose={onSchliessen}
         title="Einstellungen"
         backLabel="Zurück"
-        sections={abschnitte()}
+        sections={abschnitte(ansicht)}
       />
     </div>
   );
@@ -180,6 +170,7 @@ function Ansicht({ mitErgaenzungen, onChange }: AnsichtProps) {
           </label>
         ))}
       </RadioGroup>
+      <Hinweis>Hell oder dunkel folgt dem Gerät.</Hinweis>
     </Gruppe>
   );
 }
@@ -215,7 +206,6 @@ function Ueber() {
         Lernhelfer hinzugefügt. Der Originaltext gehört seinem Autor, diese Fassung ist nur für den
         eigenen Gebrauch.
       </Hinweis>
-      <Hinweis>Hell oder dunkel folgt dem Gerät.</Hinweis>
       <a
         href={VORLAGE}
         target="_blank"
