@@ -168,6 +168,10 @@ und Autor stehen nur hier, die Gliederung zeigt die Seite selbst.
 
 - Kopf- und Fußzeilen, Seitenzahlen und Silbentrennung am Zeilenende des PDFs
   übernimmst du nicht.
+- **Original ist, was man auf der Seite sieht.** Steht Text nur als Bild auf
+  der Seite (z.B. eine eingescannte Folie), schreib ihn vom Bild ab. Text, den
+  pdftotext liefert, der auf der Seite aber nicht zu sehen ist (verdeckt,
+  weiß auf weiß, Notizen einer Folie), übernimmst du nicht.
 - **Abbildungen:** Der Text in den eckigen Klammern ist die Bildunterschrift
   des Originals, wortgleich (die Prüfung zählt ihn mit). Hat die Abbildung
   keine, schreib `![](bilder/…)`. Ein Bild steht allein in seinem Absatz.
@@ -198,7 +202,8 @@ und Autor stehen nur hier, die Gliederung zeigt die Seite selbst.
   (`bilder/s12-1.jpg`), dann ist die Datei viel kleiner. Sieh dir jeden
   Ausschnitt an und korrigiere die Angaben, bis die ganze Abbildung samt
   Beschriftung drin ist, aber nicht ihre Bildunterschrift (die steht als Text
-  darunter). `--grau` macht die Datei kleiner, `--dpi 200` schärfer. Größe pro
+  darunter). `--grau` macht sie zu einem Graustufenbild und damit kleiner,
+  `--dpi 200` schärfer. Größe pro
   Bild am besten unter 200 KB, die Seite enthält alle Bilder.
 
 ---
@@ -467,9 +472,14 @@ Eingang bei (−1,2 | 0)), `nand`, `nor`, `xnor` (mit Negationskreis);
   Legende gibt es nicht), `bereich={[a, b]}` begrenzt sie. Die erste Kurve
   ist rot und kräftig, jede weitere hat eigene Farbe und Strichart (die
   zweite grau gestrichelt, gut für eine Bezugslinie wie „63 %“); setze keine
-  Farben.
+  Farben. Bis zu sechs Kurven sind verschieden, die siebte sähe aus wie die
+  erste.
 - `Punkt x y text anker`: ein markierter Punkt.
 - Ohne Kurven ist es ein leeres Koordinatensystem.
+- Zahlen an den Achsen setzt der Graph selbst: an der Achse, wenn der Bereich
+  die 0 enthält, sonst am unteren bzw. linken Rand. Sehr kleine und sehr
+  große Zahlen stehen als Zehnerpotenz (`2·10⁻⁶`), setze sie nicht selbst
+  mit `Hilfslinie`.
 - Logarithmische Achsen gibt es nicht: rechne in Zehnerpotenzen und
   beschrifte die Achse entsprechend, z.B. `xText="$\log_{10}(f/\mathrm{Hz})$"`.
 
@@ -483,7 +493,9 @@ Eingang bei (−1,2 | 0)), `nand`, `nor`, `xnor` (mit Negationskreis);
 - Gleicher Maßstab auf beiden Achsen, Achsen „Re“ und „Im“ (`xText`, `yText`
   ändern sie, `achsen={false}` blendet sie aus).
 - `Zeiger`: `nach={[x, y]}` oder `betrag` und `winkel` in Grad, `von`
-  (Standard Ursprung, z.B. für Zeiger hintereinander), `name`.
+  (Standard Ursprung, z.B. für Zeiger hintereinander), `name`. Der erste
+  Zeiger ist rot und kräftig, jeder weitere hat eigene Farbe oder
+  Strichart, bis zu sechs. Setz den wichtigsten (z.B. die Summe) zuerst.
 
 `Hilfslinie` (gestrichelt, grau) geht in `Funktionsgraph` und
 `Zeigerdiagramm`: `von` und `nach` für eine Strecke (z.B. eine Asymptote oder
@@ -518,10 +530,10 @@ selben Block nimmt statt einer festen Angabe auch eine **Funktion der Werte**:
   <Hilfslinie winkel={0} text="a" />
   <Hilfslinie winkel={120} text="b" />
   <Hilfslinie winkel={240} text="c" />
+  <Zeiger betrag={1.5} winkel={({ t, w }) => (w * t * 180) / Math.PI} name="$B$" />
   <Zeiger betrag={({ i }) => i[0]} winkel={0} name="$B_a$" />
   <Zeiger betrag={({ i }) => i[1]} winkel={120} name="$B_b$" />
   <Zeiger betrag={({ i }) => i[2]} winkel={240} name="$B_c$" />
-  <Zeiger betrag={1.5} winkel={({ t, w }) => (w * t * 180) / Math.PI} name="$B$" />
 </Zeigerdiagramm>
 Probier: Spiel die Animation ab. Der Zeiger $B$ behält seine Länge und dreht sich einmal pro Periode der Ströme. (Beispielwerte, nicht aus dem Skript)
 :::
@@ -553,7 +565,12 @@ Graphen, dann alle `Regler` und `Wert` als Tabelle „Parameter | Wert“, zulet
 der Text („Probier: …“). Die Reihenfolge im Quelltext ist dafür egal.
 
 - Werte in **SI-Grundeinheiten** (Ω, F, s, V, A); die Anzeige setzt selbst
-  Vorsätze und Dezimalkomma: 0.000001 F → „1 µF“.
+  Vorsätze und Dezimalkomma: 0.000001 F → „1 µF“. Vorsätze bekommen Ω, V, A,
+  F, H, Hz, s, W, J, C, S, T, Wb, m, N, Pa, VA, var, eV, g, Wh, Ah, Ws, bit,
+  mol, lm und lx (also `einheit="eV"`, nicht `"keV"`, und `einheit="g"` für
+  Massen). Andere Einheiten (°, %, dB …) und Werte ohne Einheit bleiben ohne
+  Vorsatz; sehr kleine und sehr große Zahlen stehen dann als Zehnerpotenz:
+  0.000000016 → „1,6·10⁻⁸“.
 - Werte, die auf Regler reagieren: `Schalter geschlossen={({ S }) => S === 1}`,
   `strom`, `spannung`, `name`, `wert`, `akzent` der Schaltzeichen, `punkte`
   von `Linie`, `x`/`y` von `Punkt`, Zeiger, Hilfslinien, Signalfolgen eines
