@@ -24,16 +24,23 @@ import { Gemischt, type Anker } from "@/primitiven/flaeche";
 // Legende: Der Name steht am Ende der Kurve. Beschriftungen sind HTML mit
 // KaTeX über dem Graphen.
 
+// Sechs Stile, jeder unterscheidet sich von allen anderen in Farbe oder
+// Strichart; erst der siebte wiederholt den ersten.
 const STILE = [
   { farbe: "var(--kurve)", strich: undefined, breite: 2.5 },
   { farbe: "var(--muted-foreground)", strich: "6 4", breite: 1.5 },
   { farbe: "var(--foreground)", strich: "2 4", breite: 2 },
   { farbe: "var(--muted-foreground)", strich: "9 4 2 4", breite: 1.5 },
+  { farbe: "var(--kurve)", strich: "6 4", breite: 2 },
+  { farbe: "var(--foreground)", strich: undefined, breite: 1.5 },
 ];
 const ZEIGER = [
   { farbe: "var(--kurve)", strich: undefined, breite: 2.5 },
   { farbe: "var(--foreground)", strich: "7 5", breite: 2 },
   { farbe: "var(--muted-foreground)", strich: "2 4", breite: 2 },
+  { farbe: "var(--foreground)", strich: undefined, breite: 2 },
+  { farbe: "var(--kurve)", strich: "7 5", breite: 2 },
+  { farbe: "var(--muted-foreground)", strich: "9 4 2 4", breite: 2 },
 ];
 
 type Achse = { min: number; max: number };
@@ -53,6 +60,19 @@ function px(g: Graph, [x, y]: [number, number]): [number, number] {
     ((x - g.x.min) / (g.x.max - g.x.min)) * g.breite,
     ((g.y.max - y) / (g.y.max - g.y.min)) * g.hoehe,
   ];
+}
+
+/** Zahlen an einer Achse: Vielfache des Rasterabstands, ohne Rundungsreste. */
+function achsenzahl(n: number, abstand: number) {
+  return zahl(Math.round(n / abstand) * abstand, 3);
+}
+
+/** Vielfache von `abstand` im Bereich, für Zahlen am Rand des Graphen. */
+function teilung(min: number, max: number, abstand: number) {
+  const liste: number[] = [];
+  for (let k = Math.ceil(min / abstand - 1e-9); k * abstand <= max + 1e-9 * abstand; k++)
+    liste.push(k * abstand);
+  return liste;
 }
 
 /** Ein schöner Rasterabstand für etwa sechs Linien. */
@@ -377,16 +397,49 @@ export function Funktionsgraph({
         )
       }
     >
-      {() => (
-        <>
-          <Coordinates.Cartesian
-            xAxis={{ lines: sx, labels: (n) => zahl(n) }}
-            yAxis={{ lines: sy, labels: (n) => zahl(n) }}
-            subdivisions={5}
-          />
-          {kinder}
-        </>
-      )}
+      {(g) => {
+        // Liegt eine Achse außerhalb des Graphen (z.B. y von 2 bis 5), stehen
+        // ihre Zahlen am unteren bzw. linken Rand, sonst fehlten sie.
+        const xAchseSichtbar = y[0] <= 0 && 0 <= y[1];
+        const yAchseSichtbar = x[0] <= 0 && 0 <= x[1];
+        return (
+          <>
+            <Coordinates.Cartesian
+              xAxis={{
+                lines: sx,
+                labels: xAchseSichtbar ? (n) => achsenzahl(n, sx) : false,
+              }}
+              yAxis={{
+                lines: sy,
+                labels: yAchseSichtbar ? (n) => achsenzahl(n, sy) : false,
+              }}
+              subdivisions={5}
+            />
+            {!xAchseSichtbar &&
+              teilung(x[0], x[1], sx).map((n) => (
+                <GraphText
+                  key={`x${n}`}
+                  bei={[n, g.y.min]}
+                  text={achsenzahl(n, sx)}
+                  // Die Zahl am rechten Ende ragte sonst über den Rand.
+                  anker={n > x[1] - sx / 2 ? "oben links" : "oben"}
+                  bezug
+                />
+              ))}
+            {!yAchseSichtbar &&
+              teilung(y[0], y[1], sy).map((n) => (
+                <GraphText
+                  key={`y${n}`}
+                  bei={[g.x.min, n]}
+                  text={achsenzahl(n, sy)}
+                  anker={n > y[1] - sy / 2 ? "unten rechts" : "rechts"}
+                  bezug
+                />
+              ))}
+            {kinder}
+          </>
+        );
+      }}
     </Rahmen>
   );
 }

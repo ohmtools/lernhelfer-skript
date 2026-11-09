@@ -120,7 +120,7 @@ export function Regler({
           min={log ? 0 : min}
           max={log ? SCHRITTE_LOG : max}
           step={log ? 1 : (schritt ?? (max - min) / 100)}
-          value={zuRegler(wert)}
+          value={[zuRegler(wert)]}
           onValueChange={(neu) => setze(name, vonRegler(Array.isArray(neu) ? neu[0] : neu))}
         />
       </td>
@@ -212,7 +212,7 @@ function Zeitregler({
           min={min}
           max={max}
           step={schritt ?? (max - min) / 200}
-          value={wert}
+          value={[wert]}
           onValueChange={(neu) => {
             setLaeuft(false);
             setze(name, Array.isArray(neu) ? neu[0] : neu);

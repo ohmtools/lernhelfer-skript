@@ -48,7 +48,8 @@ const box = [
 ];
 fs.mkdirSync(path.dirname(path.resolve(ziel)), { recursive: true });
 const ohneEndung = path.resolve(ziel).slice(0, -endung.length);
-execFileSync("pdftoppm", [
+// pdftoppm schreibt PNG und JPEG trotz -gray in Farbe, pdftocairo in Graustufen.
+execFileSync(grau ? "pdftocairo" : "pdftoppm", [
   "-f",
   seite,
   "-l",
